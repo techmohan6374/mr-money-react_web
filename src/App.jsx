@@ -7,6 +7,7 @@ from "react-router-dom"
 
 import Login from "./pages/Login"
 import Dashboard from "./pages/Dashboard"
+import Terms from "./pages/Terms"
 import ProtectedRoute from "./ProtectedRoute"
 
 function App() {
@@ -29,6 +30,11 @@ element={
 <Dashboard />
 </ProtectedRoute>
 }
+/>
+
+<Route
+path="/terms"
+element={<Terms />}
 />
 
 </Routes>
