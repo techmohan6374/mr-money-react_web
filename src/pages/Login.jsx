@@ -7,7 +7,7 @@ function Login() {
     const handleSuccess = async (credentialResponse) => {
         try {
             const result = await axios.post(
-                'https://localhost:7202/api/Auth/google-login',
+                'https://mrmoney-api.onrender.com/api/Auth/google-login',
                 {
                     token: credentialResponse.credential
                 }
