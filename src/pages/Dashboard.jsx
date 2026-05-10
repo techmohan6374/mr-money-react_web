@@ -4,7 +4,7 @@ import './Dashboard.css'
 import appLogo from '../assets/app-logo.png'
 import { useData } from '../context/DataContext'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChartPie, faReceipt, faWallet, faChartSimple, faGear, faBars, faSearch, faSun, faMoon, faBell, faPlus, faExchangeAlt, faDollarSign, faArrowTrendUp, faArrowTrendDown, faChevronDown, faUser, faSignOutAlt, faTimes, faBuilding, faMugHot, faShoppingCart, faTicket } from '@fortawesome/free-solid-svg-icons'
+import { faChartPie, faReceipt, faWallet, faChartSimple, faGear, faBars, faSearch, faSun, faMoon, faBell, faPlus, faExchangeAlt, faDollarSign, faArrowTrendUp, faArrowTrendDown, faChevronDown, faUser, faSignOutAlt, faTimes, faBuilding, faMugHot, faShoppingCart, faTicket, faCheck } from '@fortawesome/free-solid-svg-icons'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input, Button, Select, Form, Modal, Segmented } from 'antd'
 
@@ -20,6 +20,7 @@ function Dashboard() {
     // Modal states
     const [isAddTxModalOpen, setIsAddTxModalOpen] = useState(false)
     const [form] = Form.useForm()
+    const txType = Form.useWatch('type', form)
 
     const { transactions, accounts, totalIncome, totalExpense, netBalance, addTransaction, formatCurrency, formatDate, themeMode, toggleTheme } = useData()
 
@@ -247,6 +248,7 @@ function Dashboard() {
                             <Segmented
                                 block
                                 size="large"
+                                className="transaction-type-segmented"
                                 options={[
                                     { label: 'Expense', value: 'expense', icon: <FontAwesomeIcon icon={faArrowTrendDown} style={{ color: '#EF4444' }} /> },
                                     { label: 'Income', value: 'income', icon: <FontAwesomeIcon icon={faArrowTrendUp} style={{ color: '#10B981' }} /> },
@@ -268,13 +270,16 @@ function Dashboard() {
                                 type="number" 
                                 prefix={<span style={{ fontSize: '24px', color: 'var(--text-muted)', marginRight: '8px' }}>₹</span>}
                                 placeholder="0.00" 
-                                variant="borderless"
+                                className="amount-input"
                                 style={{ 
                                     textAlign: 'center', 
                                     fontSize: '42px', 
-                                    height: '60px', 
+                                    height: '70px', 
                                     fontWeight: '700',
-                                    color: 'var(--text-primary)'
+                                    color: 'var(--text-primary)',
+                                    borderRadius: '16px',
+                                    border: '1.5px solid var(--nav-border)',
+                                    padding: '0 12px'
                                 }} 
                             />
                         </Form.Item>
@@ -286,17 +291,21 @@ function Dashboard() {
                     </Form.Item>
                     
                     <Form.Item label="Category" name="category">
-                        <Select size="large" style={{ width: '100%' }}>
-                            <Select.Option value="Food & Dining">Food & Dining</Select.Option>
-                            <Select.Option value="Shopping">Shopping</Select.Option>
-                            <Select.Option value="Entertainment">Entertainment</Select.Option>
-                            <Select.Option value="General">General</Select.Option>
-                            <Select.Option value="Income">Income</Select.Option>
-                        </Select>
+                        <Segmented
+                            block
+                            className="category-segmented"
+                            options={
+                                txType === 'income' 
+                                    ? ['Salary', 'Business', 'Investment', 'Gift', 'Others']
+                                    : txType === 'transfer'
+                                    ? ['Bank', 'Wallet', 'Friend', 'Others']
+                                    : ['Food', 'Shopping', 'Travel', 'Health', 'Fun', 'Others']
+                            }
+                        />
                     </Form.Item>
 
                     <Form.Item style={{ marginBottom: 0, marginTop: '12px' }}>
-                        <Button type="primary" htmlType="submit" block size="large" style={{ height: '50px', borderRadius: '12px', fontWeight: '600', fontSize: '16px' }}>
+                        <Button type="primary" htmlType="submit" block size="large" icon={<FontAwesomeIcon icon={faCheck} />} style={{ height: '50px', borderRadius: '12px', fontWeight: '600', fontSize: '16px', background: 'var(--accent-green)', borderColor: 'var(--accent-green)' }}>
                             Save Transaction
                         </Button>
                     </Form.Item>
