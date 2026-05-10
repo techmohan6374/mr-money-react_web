@@ -200,9 +200,41 @@ export default function Transactions() {
                                     <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--hover-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', fontSize: '14px' }}>
                                         {getIconForCategory(cat)}
                                     </div>
-                                    <Tag color="default" style={{ borderRadius: '6px', fontWeight: '500', margin: 0 }}>{cat}</Tag>
+                                    <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{cat}</span>
                                 </div>
                             )
+                        },
+                        {
+                            title: 'Type',
+                            dataIndex: 'type',
+                            key: 'type',
+                            width: 120,
+                            render: (type) => {
+                                let color = 'default';
+                                let icon = null;
+                                if (type === 'income') { color = 'success'; icon = faArrowTrendUp; }
+                                else if (type === 'expense') { color = 'error'; icon = faArrowTrendDown; }
+                                else if (type === 'transfer') { color = 'processing'; icon = faExchangeAlt; }
+                                
+                                return (
+                                    <Tag 
+                                        color={color} 
+                                        style={{ 
+                                            borderRadius: '6px', 
+                                            textTransform: 'capitalize', 
+                                            fontWeight: '600', 
+                                            padding: '4px 12px',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            border: 'none'
+                                        }}
+                                    >
+                                        {icon && <FontAwesomeIcon icon={icon} />}
+                                        <span>{type}</span>
+                                    </Tag>
+                                );
+                            }
                         },
                         {
                             title: 'Description',
