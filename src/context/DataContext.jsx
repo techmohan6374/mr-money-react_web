@@ -23,6 +23,21 @@ export function DataProvider({ children }) {
         } catch { return []; }
     });
 
+    const [categories, setCategories] = useState(() => {
+        try {
+            const stored = localStorage.getItem('mrMoney_categories');
+            return stored ? JSON.parse(stored) : [
+                { name: 'Food', icon: 'faMugHot', color: '#F97316', type: 'expense' },
+                { name: 'Shopping', icon: 'faShoppingCart', color: '#A855F7', type: 'expense' },
+                { name: 'Travel', icon: 'faTicket', color: '#EC4899', type: 'expense' },
+                { name: 'Bills', icon: 'faReceipt', color: '#EF4444', type: 'expense' },
+                { name: 'Salary', icon: 'faBriefcase', color: '#10B981', type: 'income' },
+                { name: 'Invest', icon: 'faChartLine', color: '#3B82F6', type: 'income' },
+                { name: 'Others', icon: 'faPlus', color: '#6B7280', type: 'all' }
+            ];
+        } catch { return []; }
+    });
+
     const [themeMode, setThemeMode] = useState(() => {
         return localStorage.getItem('theme') || 'light';
     });
@@ -45,6 +60,10 @@ export function DataProvider({ children }) {
     useEffect(() => {
         localStorage.setItem('mrMoney_transactions', JSON.stringify(transactions));
     }, [transactions]);
+
+    useEffect(() => {
+        localStorage.setItem('mrMoney_categories', JSON.stringify(categories));
+    }, [categories]);
 
     // ── Data Modification Methods ──
     const addTransaction = (newTx) => {
@@ -74,6 +93,14 @@ export function DataProvider({ children }) {
 
     const deleteTransaction = (id) => {
         setTransactions(prev => prev.filter(t => t.id !== id));
+    };
+
+    const addCategory = (newCat) => {
+        setCategories(prev => [...prev, { ...newCat, id: Date.now() }]);
+    };
+
+    const editTransaction = (id, updates) => {
+        setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
     };
 
     const addAccount = (newAcc) => {
@@ -227,6 +254,9 @@ export function DataProvider({ children }) {
         weeklyChartData,
         themeMode,
         toggleTheme,
+        categories,
+        addCategory,
+        editTransaction
     };
 
     return (

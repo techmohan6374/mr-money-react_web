@@ -4,9 +4,10 @@ import './Dashboard.css'
 import appLogo from '../assets/app-logo.png'
 import { useData } from '../context/DataContext'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChartPie, faReceipt, faWallet, faChartSimple, faGear, faBars, faSearch, faSun, faMoon, faBell, faPlus, faExchangeAlt, faDollarSign, faArrowTrendUp, faArrowTrendDown, faChevronDown, faUser, faSignOutAlt, faTimes, faBuilding, faMugHot, faShoppingCart, faTicket, faCheck } from '@fortawesome/free-solid-svg-icons'
+import { faChartPie, faReceipt, faWallet, faChartSimple, faGear, faBars, faSearch, faSun, faMoon, faBell, faPlus, faExchangeAlt, faDollarSign, faArrowTrendUp, faArrowTrendDown, faChevronDown, faUser, faSignOutAlt, faTimes, faBuilding, faMugHot, faShoppingCart, faTicket, faCheck, faBolt, faBriefcase, faChartLine, faHamburger, faGift, faHome, faUserCircle, faHeartbeat, faSliders, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Input, Button, Select, Form, Modal, Segmented } from 'antd'
+import { Input, Button, Select, Form, Modal, Segmented, DatePicker } from 'antd'
+import dayjs from 'dayjs'
 
 function Dashboard() {
     const navigate = useNavigate()
@@ -16,13 +17,23 @@ function Dashboard() {
     const [scrolled, setScrolled] = useState(false)
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
-    
-    // Modal states
+    const { 
+        transactions, accounts, totalIncome, totalExpense, netBalance, 
+        addTransaction, formatCurrency, formatDate, themeMode, toggleTheme,
+        categories, addCategory 
+    } = useData()
+
     const [isAddTxModalOpen, setIsAddTxModalOpen] = useState(false)
+    const [isAddCatModalOpen, setIsAddCatModalOpen] = useState(false)
+    const [newCatForm] = Form.useForm()
     const [form] = Form.useForm()
     const txType = Form.useWatch('type', form)
-
-    const { transactions, accounts, totalIncome, totalExpense, netBalance, addTransaction, formatCurrency, formatDate, themeMode, toggleTheme } = useData()
+    const selectedCategory = Form.useWatch('category', form)
+    
+    const iconMap = {
+        faMugHot, faShoppingCart, faTicket, faReceipt, faBuilding, faPlus, faBolt,
+        faBriefcase, faChartLine, faHamburger, faGift, faHome, faUserCircle, faHeartbeat
+    }
 
     const userData = localStorage.getItem("user")
     if (!userData) {
@@ -79,7 +90,19 @@ function Dashboard() {
     }
 
     const handleAddTx = (values) => {
-        addTransaction(values)
+        if (values.type === 'transfer') {
+            const fromAcc = accounts.find(a => a.name === values.fromAccount);
+            const toAcc = accounts.find(a => a.name === values.toAccount);
+            if (fromAcc && toAcc) {
+                transferFunds(fromAcc.id, toAcc.id, values.amount);
+            }
+        } else {
+            const formattedValues = {
+                ...values,
+                date: values.date ? values.date.toISOString() : new Date().toISOString()
+            }
+            addTransaction(formattedValues)
+        }
         setIsAddTxModalOpen(false)
         form.resetFields()
     }
@@ -165,8 +188,8 @@ function Dashboard() {
                                 style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: '14px' }}
                             />
                         </div>
-                        <button className="notification-btn" onClick={() => navigate('/settings')} style={{ background: 'transparent', border: '1px solid var(--nav-border)', borderRadius: '8px' }}>
-                            <FontAwesomeIcon icon={faGear} />
+                        <button className="notification-btn" onClick={() => navigate('/settings')} style={{ background: 'transparent', border: '1px solid var(--nav-border)', borderRadius: '8px', color: 'var(--text-muted)' }}>
+                            <FontAwesomeIcon icon={faSliders} />
                         </button>
                     </div>
                 </header>
@@ -240,10 +263,14 @@ function Dashboard() {
                     form={form}
                     layout="vertical"
                     onFinish={handleAddTx}
-                    initialValues={{ type: 'expense', category: 'General' }}
-                    style={{ marginTop: '24px', padding: '0 4px' }}
+                    initialValues={{ 
+                        type: 'expense', 
+                        category: 'Others',
+                        date: dayjs()
+                    }}
+                    style={{ marginTop: '16px' }}
                 >
-                    <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+                    <div style={{ marginBottom: '20px' }}>
                         <Form.Item name="type" style={{ marginBottom: 0 }}>
                             <Segmented
                                 block
@@ -254,63 +281,127 @@ function Dashboard() {
                                     { label: 'Income', value: 'income', icon: <FontAwesomeIcon icon={faArrowTrendUp} style={{ color: '#10B981' }} /> },
                                     { label: 'Transfer', value: 'transfer', icon: <FontAwesomeIcon icon={faExchangeAlt} style={{ color: '#3B82F6' }} /> }
                                 ]}
-                                style={{ borderRadius: '12px', padding: '4px', background: 'var(--hover-bg)' }}
                             />
                         </Form.Item>
                     </div>
 
-                    <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                        <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Enter Amount</div>
-                        <Form.Item 
-                            name="amount" 
-                            rules={[{ required: true, message: 'Please enter an amount' }]}
-                            style={{ marginBottom: 0 }}
-                        >
-                            <Input 
-                                type="number" 
-                                prefix={<span style={{ fontSize: '24px', color: 'var(--text-muted)', marginRight: '8px' }}>₹</span>}
-                                placeholder="0.00" 
-                                className="amount-input"
-                                style={{ 
-                                    textAlign: 'center', 
-                                    fontSize: '42px', 
-                                    height: '70px', 
-                                    fontWeight: '700',
-                                    color: 'var(--text-primary)',
-                                    borderRadius: '16px',
-                                    border: '1.5px solid var(--nav-border)',
-                                    padding: '0 12px'
-                                }} 
-                            />
-                        </Form.Item>
-                        <div style={{ width: '100px', height: '2px', background: 'var(--accent-green)', margin: '0 auto', borderRadius: '2px', opacity: 0.3 }}></div>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <div style={{ flex: 2 }}>
+                            <Form.Item label="Transaction Name" name="name" rules={[{ required: true, message: 'Required' }]}>
+                                <Input placeholder="e.g. Starbucks" size="large" style={{ borderRadius: '10px' }} />
+                            </Form.Item>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <Form.Item label="Amount" name="amount" rules={[{ required: true, message: 'Required' }]}>
+                                <Input type="number" prefix="₹" size="large" placeholder="0.00" style={{ borderRadius: '10px' }} className="amount-input-compact" />
+                            </Form.Item>
+                        </div>
                     </div>
 
-                    <Form.Item label="Description" name="name" rules={[{ required: true, message: 'Please enter a description' }]}>
-                        <Input placeholder="e.g. Starbucks" size="large" style={{ borderRadius: '10px' }} />
+                    <Form.Item label="Description" name="description">
+                        <Input.TextArea placeholder="Add extra notes here..." rows={2} style={{ borderRadius: '10px' }} />
                     </Form.Item>
+
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <div style={{ flex: 1 }}>
+                            <Form.Item label="Date & Time" name="date">
+                                <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%', borderRadius: '10px' }} size="large" />
+                            </Form.Item>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            {txType === 'transfer' ? (
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <Form.Item label="From" name="fromAccount" rules={[{ required: true }]} style={{ flex: 1 }}>
+                                        <Select size="large" placeholder="From">
+                                            {accounts?.map(acc => <Select.Option key={acc.id} value={acc.name}>{acc.name}</Select.Option>)}
+                                        </Select>
+                                    </Form.Item>
+                                    <Form.Item label="To" name="toAccount" rules={[{ required: true }]} style={{ flex: 1 }}>
+                                        <Select size="large" placeholder="To">
+                                            {accounts?.map(acc => <Select.Option key={acc.id} value={acc.name}>{acc.name}</Select.Option>)}
+                                        </Select>
+                                    </Form.Item>
+                                </div>
+                            ) : (
+                                <Form.Item label="Account" name="account">
+                                    <Select size="large" style={{ width: '100%', borderRadius: '10px' }} placeholder="Select Account">
+                                        {accounts?.map(acc => <Select.Option key={acc.id} value={acc.name}>{acc.name}</Select.Option>)}
+                                    </Select>
+                                </Form.Item>
+                            )}
+                        </div>
+                    </div>
                     
-                    <Form.Item label="Category" name="category">
-                        <Segmented
-                            block
-                            className="category-segmented"
-                            options={
-                                txType === 'income' 
-                                    ? ['Salary', 'Business', 'Investment', 'Gift', 'Others']
-                                    : txType === 'transfer'
-                                    ? ['Bank', 'Wallet', 'Friend', 'Others']
-                                    : ['Food', 'Shopping', 'Travel', 'Health', 'Fun', 'Others']
-                            }
-                        />
+                    <Form.Item label="Category" name="category" className="category-item-custom">
+                        <div className="category-chip-grid">
+                            {categories.filter(cat => cat.type === txType || cat.type === 'all').map(cat => (
+                                <div 
+                                    key={cat.name}
+                                    className={`category-chip ${selectedCategory === cat.name ? 'active' : ''}`}
+                                    onClick={() => form.setFieldsValue({ category: cat.name })}
+                                >
+                                    <FontAwesomeIcon icon={iconMap[cat.icon] || faReceipt} style={{ color: cat.color }} />
+                                    <span>{cat.name}</span>
+                                </div>
+                            ))}
+                            <div 
+                                className="category-chip add-btn"
+                                onClick={() => setIsAddCatModalOpen(true)}
+                                style={{ borderStyle: 'dashed' }}
+                            >
+                                <FontAwesomeIcon icon={faPlus} style={{ color: 'var(--accent-green)' }} />
+                                <span>Add</span>
+                            </div>
+                        </div>
                     </Form.Item>
 
-                    <Form.Item style={{ marginBottom: 0, marginTop: '12px' }}>
-                        <Button type="primary" htmlType="submit" block size="large" icon={<FontAwesomeIcon icon={faCheck} />} style={{ height: '50px', borderRadius: '12px', fontWeight: '600', fontSize: '16px', background: 'var(--accent-green)', borderColor: 'var(--accent-green)' }}>
+                    <Form.Item style={{ marginBottom: 0, marginTop: '24px' }}>
+                        <Button type="primary" htmlType="submit" block size="large" icon={<FontAwesomeIcon icon={faCheck} />} style={{ height: '52px', borderRadius: '12px', fontWeight: '700', fontSize: '16px', background: 'var(--accent-green)', borderColor: 'var(--accent-green)' }}>
                             Save Transaction
                         </Button>
                     </Form.Item>
                 </Form>
             </Modal>
+
+            {/* Add Category Modal */}
+            <Modal
+                title="Create New Category"
+                open={isAddCatModalOpen}
+                onCancel={() => setIsAddCatModalOpen(false)}
+                onOk={() => newCatForm.submit()}
+                centered
+                width={400}
+                className="premium-modal small"
+            >
+                <Form
+                    form={newCatForm}
+                    layout="vertical"
+                    onFinish={(values) => {
+                        addCategory({ ...values, type: txType });
+                        setIsAddCatModalOpen(false);
+                        newCatForm.resetFields();
+                    }}
+                    initialValues={{ color: '#10B981', icon: 'faTag' }}
+                    style={{ marginTop: '16px' }}
+                >
+                    <Form.Item label="Category Name" name="name" rules={[{ required: true }]}>
+                        <Input placeholder="e.g. Subscriptions" size="large" />
+                    </Form.Item>
+                    <Form.Item label="Icon" name="icon" rules={[{ required: true }]}>
+                        <Select size="large">
+                            {Object.keys(iconMap).map(key => (
+                                <Select.Option key={key} value={key}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <FontAwesomeIcon icon={iconMap[key]} />
+                                        <span>{key.replace('fa', '')}</span>
+                                    </div>
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+                </Form>
+            </Modal>
+
 
             {/* Global FAB */}
             <button 
