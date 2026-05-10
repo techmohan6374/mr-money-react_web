@@ -7,36 +7,27 @@ export function useData() {
 }
 
 export function DataProvider({ children }) {
-    // Initial State definition
-    const defaultAccounts = [
-        { id: 1, name: "Main Checking", type: "Bank Account", balance: 45250.00, color: "linear-gradient(135deg, #3B82F6, #2563EB)", number: "**** 4521" },
-        { id: 2, name: "Savings", type: "Bank Account", balance: 125000.00, color: "linear-gradient(135deg, #10B981, #059669)", number: "**** 8832" },
-        { id: 3, name: "Credit Card", type: "Credit", balance: -12400.00, color: "linear-gradient(135deg, #8B5CF6, #6D28D9)", number: "**** 1198" },
-        { id: 4, name: "Digital Wallet", type: "Wallet", balance: 2500.00, color: "linear-gradient(135deg, #F59E0B, #D97706)", number: "pay@upi" },
-    ];
 
-    const defaultTransactions = [
-        { id: 1, name: "Netflix Subscription", category: "Entertainment", amount: 849, type: "expense", date: new Date().toISOString(), status: "Completed" },
-        { id: 2, name: "Salary Deposit", category: "Income", amount: 85000, type: "income", date: new Date(Date.now() - 86400000).toISOString(), status: "Completed" },
-        { id: 3, name: "Starbucks Coffee", category: "Food & Dining", amount: 350, type: "expense", date: new Date(Date.now() - 86400000).toISOString(), status: "Completed" },
-        { id: 4, name: "Grocery Store", category: "Shopping", amount: 4200, type: "expense", date: new Date(Date.now() - 3 * 86400000).toISOString(), status: "Completed" },
-    ];
-
-    // State Initialization
+    // ── State Initialization (empty defaults, always from localStorage) ──
     const [accounts, setAccounts] = useState(() => {
-        const stored = localStorage.getItem('mrMoney_accounts');
-        return stored ? JSON.parse(stored) : defaultAccounts;
+        try {
+            const stored = localStorage.getItem('mrMoney_accounts');
+            return stored ? JSON.parse(stored) : [];
+        } catch { return []; }
     });
 
     const [transactions, setTransactions] = useState(() => {
-        const stored = localStorage.getItem('mrMoney_transactions');
-        return stored ? JSON.parse(stored) : defaultTransactions;
+        try {
+            const stored = localStorage.getItem('mrMoney_transactions');
+            return stored ? JSON.parse(stored) : [];
+        } catch { return []; }
     });
 
     const [themeMode, setThemeMode] = useState(() => {
-        return localStorage.getItem('theme') || 'dark';
+        return localStorage.getItem('theme') || 'light';
     });
 
+    // ── Theme sync ──
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', themeMode);
         localStorage.setItem('theme', themeMode);
@@ -46,9 +37,7 @@ export function DataProvider({ children }) {
         setThemeMode(prev => prev === 'dark' ? 'light' : 'dark');
     };
 
-
-
-    // Sync to LocalStorage
+    // ── Persist to localStorage on every change ──
     useEffect(() => {
         localStorage.setItem('mrMoney_accounts', JSON.stringify(accounts));
     }, [accounts]);
@@ -57,23 +46,25 @@ export function DataProvider({ children }) {
         localStorage.setItem('mrMoney_transactions', JSON.stringify(transactions));
     }, [transactions]);
 
-    // Data Modification Methods
+    // ── Data Modification Methods ──
     const addTransaction = (newTx) => {
+        const amount = parseFloat(newTx.amount) || 0;
         const tx = {
             ...newTx,
+            amount,
             id: Date.now(),
             date: new Date().toISOString(),
-            status: "Completed",
+            status: 'Completed',
         };
         setTransactions(prev => [tx, ...prev]);
 
-        // Automatically update account balance if an account is linked (Optional enhancement)
+        // Update linked account balance
         if (tx.accountId) {
             setAccounts(prev => prev.map(acc => {
                 if (acc.id === parseInt(tx.accountId)) {
-                    const newBalance = tx.type === 'income' 
-                        ? acc.balance + parseFloat(tx.amount) 
-                        : acc.balance - parseFloat(tx.amount);
+                    const newBalance = tx.type === 'income'
+                        ? acc.balance + amount
+                        : acc.balance - amount;
                     return { ...acc, balance: newBalance };
                 }
                 return acc;
@@ -81,13 +72,29 @@ export function DataProvider({ children }) {
         }
     };
 
+    const deleteTransaction = (id) => {
+        setTransactions(prev => prev.filter(t => t.id !== id));
+    };
+
     const addAccount = (newAcc) => {
         const acc = {
             ...newAcc,
             id: Date.now(),
-            balance: parseFloat(newAcc.balance) || 0
+            balance: parseFloat(newAcc.balance) || 0,
         };
         setAccounts(prev => [...prev, acc]);
+    };
+
+    const deleteAccount = (id) => {
+        setAccounts(prev => prev.filter(a => a.id !== id));
+    };
+
+    const editAccount = (id, updates) => {
+        setAccounts(prev => prev.map(a =>
+            a.id === id
+                ? { ...a, ...updates, balance: parseFloat(updates.balance) ?? a.balance }
+                : a
+        ));
     };
 
     const transferFunds = (fromId, toId, amount) => {
@@ -96,27 +103,25 @@ export function DataProvider({ children }) {
 
         setAccounts(prev => prev.map(acc => {
             if (acc.id === parseInt(fromId)) return { ...acc, balance: acc.balance - transferAmount };
-            if (acc.id === parseInt(toId)) return { ...acc, balance: acc.balance + transferAmount };
+            if (acc.id === parseInt(toId))   return { ...acc, balance: acc.balance + transferAmount };
             return acc;
         }));
 
-        // Log the transfer as transactions
         const date = new Date().toISOString();
-        const expenseTx = {
-            id: Date.now(), name: "Transfer Out", category: "Transfer", amount: transferAmount, type: "expense", date, status: "Completed", accountId: fromId
-        };
-        const incomeTx = {
-            id: Date.now() + 1, name: "Transfer In", category: "Transfer", amount: transferAmount, type: "income", date, status: "Completed", accountId: toId
-        };
-        setTransactions(prev => [expenseTx, incomeTx, ...prev]);
+        setTransactions(prev => [
+            { id: Date.now(),     name: 'Transfer Out', category: 'Transfer', amount: transferAmount, type: 'expense', date, status: 'Completed', accountId: fromId },
+            { id: Date.now() + 1, name: 'Transfer In',  category: 'Transfer', amount: transferAmount, type: 'income',  date, status: 'Completed', accountId: toId },
+            ...prev,
+        ]);
     };
 
+    // ── Formatters ──
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR',
-            minimumFractionDigits: 2
-        }).format(amount);
+            minimumFractionDigits: 2,
+        }).format(amount || 0);
     };
 
     const formatDate = (isoString) => {
@@ -125,30 +130,103 @@ export function DataProvider({ children }) {
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
 
-        if (date.toDateString() === today.toDateString()) return "Today";
-        if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-        
+        if (date.toDateString() === today.toDateString()) return 'Today';
+        if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
-    // Derived Data for Dashboard
-    const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-    const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-    const netBalance = accounts.reduce((sum, a) => sum + a.balance, 0); // Or totalIncome - totalExpense
+    // ── Dynamic Derived Data ──
+    const totalIncome  = useMemo(() => transactions.filter(t => t.type === 'income') .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0), [transactions]);
+    const totalExpense = useMemo(() => transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0), [transactions]);
+    const netBalance   = useMemo(() => accounts.reduce((sum, a) => sum + (parseFloat(a.balance) || 0), 0), [accounts]);
+
+    // Today's transaction count
+    const todayTxCount = useMemo(() => {
+        const today = new Date().toDateString();
+        return transactions.filter(t => new Date(t.date).toDateString() === today).length;
+    }, [transactions]);
+
+    // Average daily spend (last 30 days)
+    const avgDailySpend = useMemo(() => {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 30);
+        const recent = transactions.filter(t => t.type === 'expense' && new Date(t.date) >= cutoff);
+        const total = recent.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+        return total / 30;
+    }, [transactions]);
+
+    // Top spending category
+    const topCategory = useMemo(() => {
+        const catMap = {};
+        transactions.filter(t => t.type === 'expense').forEach(t => {
+            catMap[t.category] = (catMap[t.category] || 0) + (parseFloat(t.amount) || 0);
+        });
+        const sorted = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+        return sorted.length > 0 ? sorted[0][0] : '—';
+    }, [transactions]);
+
+    // Largest single expense
+    const largestExpense = useMemo(() => {
+        const expenses = transactions.filter(t => t.type === 'expense');
+        if (expenses.length === 0) return null;
+        return expenses.reduce((max, t) => (parseFloat(t.amount) > parseFloat(max.amount) ? t : max), expenses[0]);
+    }, [transactions]);
+
+    // Category breakdown for reports (dynamic)
+    const categoryBreakdown = useMemo(() => {
+        const catMap = {};
+        const totalExp = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+        transactions.filter(t => t.type === 'expense').forEach(t => {
+            catMap[t.category] = (catMap[t.category] || 0) + (parseFloat(t.amount) || 0);
+        });
+        const COLORS = ['#3B82F6', '#F59E0B', '#10B981', '#8B5CF6', '#EF4444', '#6B7280', '#EC4899', '#14B8A6'];
+        return Object.entries(catMap)
+            .sort((a, b) => b[1] - a[1])
+            .map(([cat, amount], i) => ({
+                cat,
+                amount,
+                pct: totalExp > 0 ? `${Math.round((amount / totalExp) * 100)}%` : '0%',
+                color: COLORS[i % COLORS.length],
+            }));
+    }, [transactions]);
+
+    // Weekly chart data (last 7 days)
+    const weeklyChartData = useMemo(() => {
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const label = d.toLocaleDateString('en-US', { weekday: 'short' });
+            const dateStr = d.toDateString();
+            const income  = transactions.filter(t => t.type === 'income'  && new Date(t.date).toDateString() === dateStr).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+            const expense = transactions.filter(t => t.type === 'expense' && new Date(t.date).toDateString() === dateStr).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+            days.push({ name: label, income, expense });
+        }
+        return days;
+    }, [transactions]);
 
     const value = {
         accounts,
         transactions,
         addTransaction,
+        deleteTransaction,
         addAccount,
+        deleteAccount,
+        editAccount,
         transferFunds,
         formatCurrency,
         formatDate,
         totalIncome,
         totalExpense,
         netBalance,
+        todayTxCount,
+        avgDailySpend,
+        topCategory,
+        largestExpense,
+        categoryBreakdown,
+        weeklyChartData,
         themeMode,
-        toggleTheme
+        toggleTheme,
     };
 
     return (

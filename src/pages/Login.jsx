@@ -22,9 +22,29 @@ function Login() {
             {/* Loading Overlay */}
             {isLoading && (
                 <div className="login-loader-overlay">
-                    <div className="loader-content">
-                        <div className="spinner"></div>
-                        <p>Authenticating with Mr.Money...</p>
+                    <div className="loader-bg-glow"></div>
+                    <div className="loader-card">
+                        <div className="loader-logo-ring">
+                            <div className="loader-ring-outer"></div>
+                            <div className="loader-ring-inner"></div>
+                            <div className="loader-logo-inner">
+                                <img src={appLogo} alt="Mr.Money" className="loader-logo-img" />
+                            </div>
+                        </div>
+                        <div className="loader-text-block">
+                            <h3 className="loader-title">Signing you in</h3>
+                            <p className="loader-subtitle">Authenticating with Mr.Money...</p>
+                        </div>
+                        <div className="loader-progress-track">
+                            <div className="loader-progress-bar"></div>
+                        </div>
+                        <div className="loader-steps">
+                            <span className="loader-step active">Verifying identity</span>
+                            <span className="loader-step-dot">•</span>
+                            <span className="loader-step">Loading profile</span>
+                            <span className="loader-step-dot">•</span>
+                            <span className="loader-step">Preparing dashboard</span>
+                        </div>
                     </div>
                 </div>
             )}

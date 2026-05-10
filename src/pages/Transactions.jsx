@@ -2,11 +2,9 @@ import React from 'react';
 import './Dashboard.css';
 import { useData } from '../context/DataContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDownload, faMugHot, faShoppingCart, faTicket, faDollarSign, faReceipt, faBolt } from '@fortawesome/free-solid-svg-icons'
+import { faMugHot, faShoppingCart, faTicket, faDollarSign, faReceipt, faBolt } from '@fortawesome/free-solid-svg-icons'
 import { motion } from 'framer-motion';
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input, Select } from 'antd';
 
 export default function Transactions() {
     const { transactions, formatCurrency, formatDate } = useData();
@@ -37,26 +35,32 @@ export default function Transactions() {
 
             <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
                 <div style={{ flex: 1 }}>
-                    <Select defaultValue="All Types">
-                        <SelectTrigger className="w-full bg-white"><SelectValue placeholder="All Types" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="All Types">All Types</SelectItem>
-                            <SelectItem value="Income">Income</SelectItem>
-                            <SelectItem value="Expense">Expense</SelectItem>
-                        </SelectContent>
+                    <Select
+                        defaultValue="All Types"
+                        size="large"
+                        style={{ width: '100%' }}
+                    >
+                        <Select.Option value="All Types">All Types</Select.Option>
+                        <Select.Option value="Income">Income</Select.Option>
+                        <Select.Option value="Expense">Expense</Select.Option>
                     </Select>
                 </div>
                 <div style={{ flex: 1 }}>
-                    <Select defaultValue="All Accounts">
-                        <SelectTrigger className="w-full bg-white"><SelectValue placeholder="All Accounts" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="All Accounts">All Accounts</SelectItem>
-                        </SelectContent>
+                    <Select
+                        defaultValue="All Accounts"
+                        size="large"
+                        style={{ width: '100%' }}
+                    >
+                        <Select.Option value="All Accounts">All Accounts</Select.Option>
                     </Select>
                 </div>
             </div>
             <div style={{ marginBottom: '24px' }}>
-                <Input type="text" placeholder="Search transactions..." className="w-full bg-white" />
+                <Input.Search
+                    placeholder="Search transactions..."
+                    size="large"
+                    style={{ width: '100%' }}
+                />
             </div>
 
             {transactions.length === 0 ? (

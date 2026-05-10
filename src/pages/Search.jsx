@@ -4,9 +4,12 @@ import { useData } from '../context/DataContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMugHot, faShoppingCart, faTicket, faDollarSign, faReceipt, faBolt, faBuilding, faCreditCard, faWallet } from '@fortawesome/free-solid-svg-icons';
 import { motion } from 'framer-motion';
+import { useSearchParams } from 'react-router-dom';
 
-export default function Search({ query }) {
+export default function Search() {
     const { transactions, accounts, formatCurrency, formatDate } = useData();
+    const [searchParams] = useSearchParams();
+    const query = searchParams.get('q') || '';
 
     const q = query.toLowerCase();
     const filteredTx = transactions.filter(tx => tx.name.toLowerCase().includes(q) || tx.category.toLowerCase().includes(q));

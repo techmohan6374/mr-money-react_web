@@ -1,38 +1,27 @@
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation, Outlet, NavLink } from "react-router-dom"
 import { useState, useEffect } from "react"
 import './Dashboard.css'
 import appLogo from '../assets/app-logo.png'
-import Transactions from './Transactions'
-import Accounts from './Accounts'
-import Reports from './Reports'
-import Settings from './Settings'
-import Search from './Search'
-import Transfer from './Transfer'
 import { useData } from '../context/DataContext'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChartPie, faReceipt, faWallet, faChartSimple, faGear, faBars, faSearch, faSun, faMoon, faBell, faPlus, faExchangeAlt, faDollarSign, faArrowTrendUp, faArrowTrendDown, faChevronDown, faUser, faSignOutAlt, faTimes, faBuilding, faMugHot, faShoppingCart, faTicket } from '@fortawesome/free-solid-svg-icons'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
+import { Input, Button, Select, Form, Modal, Segmented } from 'antd'
 
 function Dashboard() {
     const navigate = useNavigate()
+    const location = useLocation()
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [dropdownOpen, setDropdownOpen] = useState(false)
     const [scrolled, setScrolled] = useState(false)
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true)
-    const [activePage, setActivePage] = useState('Dashboard')
     const [searchQuery, setSearchQuery] = useState('')
     
     // Modal states
     const [isAddTxModalOpen, setIsAddTxModalOpen] = useState(false)
+    const [form] = Form.useForm()
 
-    // Form states
-    const [txForm, setTxForm] = useState({ name: '', amount: '', type: 'expense', category: 'General' })
-
-    const { transactions, accounts, totalIncome, totalExpense, netBalance, addTransaction, transferFunds, formatCurrency, formatDate, themeMode, toggleTheme } = useData()
+    const { transactions, accounts, totalIncome, totalExpense, netBalance, addTransaction, formatCurrency, formatDate, themeMode, toggleTheme } = useData()
 
     const userData = localStorage.getItem("user")
     if (!userData) {
@@ -40,8 +29,6 @@ function Dashboard() {
         return null
     }
     const user = JSON.parse(userData)
-
-
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 10)
@@ -57,8 +44,6 @@ function Dashboard() {
         return () => document.removeEventListener('click', handleClick)
     }, [])
 
-
-
     const logout = () => {
         localStorage.clear()
         navigate("/")
@@ -72,12 +57,15 @@ function Dashboard() {
     }
 
     const navItems = [
-        { icon: <FontAwesomeIcon icon={faChartPie} />, label: "Dashboard", id: "Dashboard" },
-        { icon: <FontAwesomeIcon icon={faWallet} />, label: "Accounts", id: "Accounts" },
-        { icon: <FontAwesomeIcon icon={faReceipt} />, label: "Transactions", id: "Transactions" },
-        { icon: <FontAwesomeIcon icon={faExchangeAlt} />, label: "Transfers", id: "Transfers" },
-        { icon: <FontAwesomeIcon icon={faChartSimple} />, label: "Reports", id: "Reports" },
+        { icon: <FontAwesomeIcon icon={faChartPie} />, label: "Dashboard", path: "/dashboard" },
+        { icon: <FontAwesomeIcon icon={faWallet} />, label: "Accounts", path: "/accounts" },
+        { icon: <FontAwesomeIcon icon={faReceipt} />, label: "Transactions", path: "/transactions" },
+        { icon: <FontAwesomeIcon icon={faExchangeAlt} />, label: "Transfers", path: "/transfers" },
+        { icon: <FontAwesomeIcon icon={faChartSimple} />, label: "Reports", path: "/reports" },
     ]
+
+    const currentNav = navItems.find(n => n.path === location.pathname);
+    const pageTitle = currentNav ? currentNav.label : (location.pathname.includes('search') ? 'Search Results' : 'Settings');
 
     const getIconForCategory = (category) => {
         switch (category?.toLowerCase()) {
@@ -89,11 +77,10 @@ function Dashboard() {
         }
     }
 
-    const handleAddTx = (e) => {
-        e.preventDefault();
-        addTransaction(txForm);
-        setIsAddTxModalOpen(false);
-        setTxForm({ name: '', amount: '', type: 'expense', category: 'General' });
+    const handleAddTx = (values) => {
+        addTransaction(values)
+        setIsAddTxModalOpen(false)
+        form.resetFields()
     }
 
     return (
@@ -109,15 +96,16 @@ function Dashboard() {
 
                 <ul className="sidebar-nav">
                     {navItems.map((item, i) => (
-                        <li className="nav-item" key={i}>
-                            <button 
-                                className={`nav-link ${activePage === item.id ? 'active' : ''}`} 
-                                onClick={() => setActivePage(item.id)}
+                        <li key={i}>
+                            <NavLink 
+                                to={item.path} 
+                                end={item.path === '/dashboard'}
+                                className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
                             >
                                 <span className="nav-icon">{item.icon}</span>
-                                {!isSidebarCollapsed && <span className="nav-label">{item.label}</span>}
+                                {!isSidebarCollapsed && <span className="sidebar-label">{item.label}</span>}
                                 {isSidebarCollapsed && <span className="nav-tooltip">{item.label}</span>}
-                            </button>
+                            </NavLink>
                         </li>
                     ))}
                 </ul>
@@ -157,24 +145,26 @@ function Dashboard() {
                         <button className="sidebar-toggle-btn desktop-only" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} style={{ background: 'transparent', border: 'none', fontSize: '20px', color: 'var(--text-secondary)' }}>
                             <FontAwesomeIcon icon={faBars} />
                         </button>
-                        <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '500', color: 'var(--text-primary)' }}>{navItems.find(n => n.id === activePage)?.label || activePage}</h2>
+                        <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '500', color: 'var(--text-primary)' }}>{pageTitle}</h2>
                     </div>
                     
                     <div className="navbar-actions" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                         <div className="header-search">
                             <span className="search-icon"><FontAwesomeIcon icon={faSearch} /></span>
-                            <Input 
+                            <input
                                 type="text"
-                                placeholder="Search transactions..." 
+                                placeholder="Search transactions..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 onKeyDown={(e) => {
-                                    if(e.key === 'Enter' && searchQuery) setActivePage('Search')
+                                    if(e.key === 'Enter' && searchQuery) {
+                                        navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+                                    }
                                 }}
-                                className="border-none shadow-none focus-visible:ring-0 bg-transparent flex-1 placeholder:text-muted-foreground"
+                                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: '14px' }}
                             />
                         </div>
-                        <button className="notification-btn" onClick={() => setActivePage('Settings')} style={{ background: 'transparent', border: '1px solid var(--nav-border)', borderRadius: '8px' }}>
+                        <button className="notification-btn" onClick={() => navigate('/settings')} style={{ background: 'transparent', border: '1px solid var(--nav-border)', borderRadius: '8px' }}>
                             <FontAwesomeIcon icon={faGear} />
                         </button>
                     </div>
@@ -205,13 +195,15 @@ function Dashboard() {
                 <ul className="mobile-nav-links">
                     {navItems.map((item, i) => (
                         <li key={i}>
-                            <button 
-                                className={`nav-link ${activePage === item.id ? 'active' : ''}`} 
-                                onClick={() => { setActivePage(item.id); setMobileMenuOpen(false); }}
+                            <NavLink 
+                                to={item.path} 
+                                end={item.path === '/dashboard'}
+                                className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
+                                onClick={() => setMobileMenuOpen(false)}
                             >
                                 <span className="nav-icon">{item.icon}</span>
                                 <span className="nav-label">{item.label}</span>
-                            </button>
+                            </NavLink>
                         </li>
                     ))}
                 </ul>
@@ -229,147 +221,87 @@ function Dashboard() {
             {/* Dashboard Content */}
             <main className="dashboard-content">
                 <AnimatePresence mode="wait">
-                {activePage === 'Dashboard' && (
-                    <motion.div 
-                        key="dashboard"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <div className="dashboard-welcome" style={{ padding: '32px', background: 'var(--card-bg)', marginBottom: '24px', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-                            <h1 style={{ fontSize: '28px', fontWeight: '600', margin: '0 0 8px 0' }}>{getGreeting()}, <span style={{ color: 'var(--accent-green)' }}>{user.name?.split(' ')[0]}</span> 👋</h1>
-                            <p style={{ color: 'var(--text-muted)', margin: 0 }}>Here's your financial overview for this month.</p>
-                            
-                            <div style={{ marginTop: '32px', borderTop: '1px solid var(--nav-border)', paddingTop: '32px' }}>
-                                <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>Total Balance</div>
-                                <div style={{ fontSize: '40px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    {formatCurrency(netBalance)} 
-                                    <span style={{ fontSize: '20px', color: 'var(--text-muted)', cursor: 'pointer' }}>👁️</span>
-                                </div>
-
-                                <div style={{ display: 'flex', gap: '32px', marginTop: '24px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--icon-bg-income)', color: 'var(--accent-green)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <FontAwesomeIcon icon={faArrowTrendDown} />
-                                        </div>
-                                        <div>
-                                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Monthly Income</div>
-                                            <div style={{ fontWeight: '500' }}>{formatCurrency(totalIncome)}</div>
-                                        </div>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--icon-bg-expense)', color: 'var(--accent-red)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <FontAwesomeIcon icon={faArrowTrendUp} />
-                                        </div>
-                                        <div>
-                                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Monthly Expense</div>
-                                            <div style={{ fontWeight: '500' }}>{formatCurrency(totalExpense)}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Summary Cards */}
-                        <div className="dashboard-stats">
-                            <motion.div className="premium-card summary-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} style={{ position: 'relative', overflow: 'hidden' }}>
-                                <div className="card-header">
-                                    <div className="card-icon-wrapper income">
-                                        <span className="card-icon"><FontAwesomeIcon icon={faBuilding} /></span>
-                                    </div>
-                                    <div className="card-trend up"><FontAwesomeIcon icon={faArrowTrendUp} /> 12.5%</div>
-                                </div>
-                                <div className="card-label">Total Income</div>
-                                <div className="card-value text-income">{formatCurrency(totalIncome)}</div>
-                                <div style={{ position: 'absolute', bottom: 0, left: 0, right: '50%', height: '4px', background: 'var(--accent-green)' }}></div>
-                            </motion.div>
-                            
-                            <motion.div className="premium-card summary-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} style={{ position: 'relative', overflow: 'hidden' }}>
-                                <div className="card-header">
-                                    <div className="card-icon-wrapper expense">
-                                        <span className="card-icon"><FontAwesomeIcon icon={faReceipt} /></span>
-                                    </div>
-                                    <div className="card-trend down"><FontAwesomeIcon icon={faArrowTrendDown} /> 8.2%</div>
-                                </div>
-                                <div className="card-label">Total Expense</div>
-                                <div className="card-value text-expense">{formatCurrency(totalExpense)}</div>
-                                <div style={{ position: 'absolute', bottom: 0, left: 0, right: '50%', height: '4px', background: 'var(--accent-red)' }}></div>
-                            </motion.div>
-                            
-                            <motion.div className="premium-card summary-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} style={{ position: 'relative', overflow: 'hidden' }}>
-                                <div className="card-header">
-                                    <div className="card-icon-wrapper balance">
-                                        <span className="card-icon"><FontAwesomeIcon icon={faExchangeAlt} /></span>
-                                    </div>
-                                    <div className="card-trend up"><FontAwesomeIcon icon={faArrowTrendUp} /> 4.1%</div>
-                                </div>
-                                <div className="card-label">Total Transfers</div>
-                                <div className="card-value text-balance">{formatCurrency(0)}</div>
-                                <div style={{ position: 'absolute', bottom: 0, left: 0, right: '50%', height: '4px', background: 'var(--accent-blue)' }}></div>
-                            </motion.div>
-                        </div>
-                </motion.div>
-                )}
-                {activePage === 'Transactions' && <Transactions key="tx" />}
-                {activePage === 'Accounts' && <Accounts key="acc" />}
-                {activePage === 'Transfers' && <Transfer key="trans" />}
-                {activePage === 'Reports' && <Reports key="rep" />}
-                {activePage === 'Settings' && <Settings key="set" />}
-                {activePage === 'Search' && <Search query={searchQuery} key="search" />}
+                    <Outlet />
                 </AnimatePresence>
             </main>
 
             {/* Add Transaction Modal */}
-            <AnimatePresence>
-                {isAddTxModalOpen && (
-                    <div className="modal-overlay">
-                        <motion.div className="modal-content" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}>
-                            <div className="modal-header">
-                                <h2>Add Transaction</h2>
-                                <button className="modal-close" onClick={() => setIsAddTxModalOpen(false)}><FontAwesomeIcon icon={faTimes} /></button>
-                            </div>
-                            <form onSubmit={handleAddTx} className="modal-form">
-                                <div className="grid gap-4 py-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="desc">Description</Label>
-                                        <Input id="desc" required value={txForm.name} onChange={e => setTxForm({...txForm, name: e.target.value})} placeholder="e.g. Starbucks" />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="amount">Amount (₹)</Label>
-                                        <Input id="amount" type="number" required value={txForm.amount} onChange={e => setTxForm({...txForm, amount: e.target.value})} placeholder="0.00" />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label>Type</Label>
-                                        <Select value={txForm.type} onValueChange={val => setTxForm({...txForm, type: val})}>
-                                            <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="expense">Expense</SelectItem>
-                                                <SelectItem value="income">Income</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label>Category</Label>
-                                        <Select value={txForm.category} onValueChange={val => setTxForm({...txForm, category: val})}>
-                                            <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="Food & Dining">Food & Dining</SelectItem>
-                                                <SelectItem value="Shopping">Shopping</SelectItem>
-                                                <SelectItem value="Entertainment">Entertainment</SelectItem>
-                                                <SelectItem value="General">General</SelectItem>
-                                                <SelectItem value="Income">Income</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-                                <Button type="submit" className="w-full">Save Transaction</Button>
-                            </form>
-                        </motion.div>
+            <Modal
+                title={<div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}><FontAwesomeIcon icon={faReceipt} style={{ color: 'white' }} /><span>Add Transaction</span></div>}
+                open={isAddTxModalOpen}
+                onCancel={() => { setIsAddTxModalOpen(false); form.resetFields(); }}
+                footer={null}
+                width={500}
+                centered
+                className="premium-modal"
+            >
+                <Form
+                    form={form}
+                    layout="vertical"
+                    onFinish={handleAddTx}
+                    initialValues={{ type: 'expense', category: 'General' }}
+                    style={{ marginTop: '24px', padding: '0 4px' }}
+                >
+                    <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+                        <Form.Item name="type" style={{ marginBottom: 0 }}>
+                            <Segmented
+                                block
+                                size="large"
+                                options={[
+                                    { label: 'Expense', value: 'expense', icon: <FontAwesomeIcon icon={faArrowTrendDown} style={{ color: '#EF4444' }} /> },
+                                    { label: 'Income', value: 'income', icon: <FontAwesomeIcon icon={faArrowTrendUp} style={{ color: '#10B981' }} /> },
+                                    { label: 'Transfer', value: 'transfer', icon: <FontAwesomeIcon icon={faExchangeAlt} style={{ color: '#3B82F6' }} /> }
+                                ]}
+                                style={{ borderRadius: '12px', padding: '4px', background: 'var(--hover-bg)' }}
+                            />
+                        </Form.Item>
                     </div>
-                )}
-            </AnimatePresence>
 
+                    <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                        <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600' }}>Enter Amount</div>
+                        <Form.Item 
+                            name="amount" 
+                            rules={[{ required: true, message: 'Please enter an amount' }]}
+                            style={{ marginBottom: 0 }}
+                        >
+                            <Input 
+                                type="number" 
+                                prefix={<span style={{ fontSize: '24px', color: 'var(--text-muted)', marginRight: '8px' }}>₹</span>}
+                                placeholder="0.00" 
+                                variant="borderless"
+                                style={{ 
+                                    textAlign: 'center', 
+                                    fontSize: '42px', 
+                                    height: '60px', 
+                                    fontWeight: '700',
+                                    color: 'var(--text-primary)'
+                                }} 
+                            />
+                        </Form.Item>
+                        <div style={{ width: '100px', height: '2px', background: 'var(--accent-green)', margin: '0 auto', borderRadius: '2px', opacity: 0.3 }}></div>
+                    </div>
+
+                    <Form.Item label="Description" name="name" rules={[{ required: true, message: 'Please enter a description' }]}>
+                        <Input placeholder="e.g. Starbucks" size="large" style={{ borderRadius: '10px' }} />
+                    </Form.Item>
+                    
+                    <Form.Item label="Category" name="category">
+                        <Select size="large" style={{ width: '100%' }}>
+                            <Select.Option value="Food & Dining">Food & Dining</Select.Option>
+                            <Select.Option value="Shopping">Shopping</Select.Option>
+                            <Select.Option value="Entertainment">Entertainment</Select.Option>
+                            <Select.Option value="General">General</Select.Option>
+                            <Select.Option value="Income">Income</Select.Option>
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item style={{ marginBottom: 0, marginTop: '12px' }}>
+                        <Button type="primary" htmlType="submit" block size="large" style={{ height: '50px', borderRadius: '12px', fontWeight: '600', fontSize: '16px' }}>
+                            Save Transaction
+                        </Button>
+                    </Form.Item>
+                </Form>
+            </Modal>
 
             {/* Global FAB */}
             <button 

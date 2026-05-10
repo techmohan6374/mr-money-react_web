@@ -4,21 +4,15 @@ import { useData } from '../context/DataContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowRight, faBuilding } from '@fortawesome/free-solid-svg-icons'
 import { motion } from 'framer-motion';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
+import { Input, Button, Select, Form } from 'antd';
 
 export default function Transfer() {
     const { accounts, transferFunds, formatCurrency } = useData();
-    const [transferForm, setTransferForm] = useState({ fromAccountId: '', toAccountId: '', amount: '' });
+    const [form] = Form.useForm();
 
-    const handleTransfer = (e) => {
-        e.preventDefault();
-        const success = transferFunds(transferForm.fromAccountId, transferForm.toAccountId, Number(transferForm.amount));
-        if (success) {
-            setTransferForm({ fromAccountId: '', toAccountId: '', amount: '' });
-        }
+    const handleTransfer = (values) => {
+        transferFunds(values.fromAccountId, values.toAccountId, Number(values.amount));
+        form.resetFields();
     };
 
     return (
@@ -56,41 +50,58 @@ export default function Transfer() {
                     </div>
                 </div>
 
-                <form onSubmit={handleTransfer}>
-                    <div className="responsive-grid-2" style={{ marginBottom: '24px', gap: '24px' }}>
-                        <div className="grid gap-2">
-                            <Label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>Select Source Account</Label>
-                            <Select value={transferForm.fromAccountId} onValueChange={val => setTransferForm({...transferForm, fromAccountId: val})}>
-                                <SelectTrigger><SelectValue placeholder="Source Account" /></SelectTrigger>
-                                <SelectContent>
-                                    {accounts.map(a => <SelectItem key={a.id} value={a.id.toString()}>{a.name} ({formatCurrency(a.balance)})</SelectItem>)}
-                                </SelectContent>
+                <Form form={form} layout="vertical" onFinish={handleTransfer}>
+                    <div className="responsive-grid-2" style={{ gap: '24px' }}>
+                        <Form.Item
+                            label={<span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>Select Source Account</span>}
+                            name="fromAccountId"
+                            rules={[{ required: true, message: 'Please select source account' }]}
+                        >
+                            <Select placeholder="Source Account" size="large" style={{ width: '100%' }}>
+                                {accounts.map(a => (
+                                    <Select.Option key={a.id} value={a.id.toString()}>
+                                        {a.name} ({formatCurrency(a.balance)})
+                                    </Select.Option>
+                                ))}
                             </Select>
-                        </div>
-                        <div className="grid gap-2">
-                            <Label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>Select Destination Account</Label>
-                            <Select value={transferForm.toAccountId} onValueChange={val => setTransferForm({...transferForm, toAccountId: val})}>
-                                <SelectTrigger><SelectValue placeholder="Destination Account" /></SelectTrigger>
-                                <SelectContent>
-                                    {accounts.map(a => <SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>)}
-                                </SelectContent>
+                        </Form.Item>
+                        <Form.Item
+                            label={<span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>Select Destination Account</span>}
+                            name="toAccountId"
+                            rules={[{ required: true, message: 'Please select destination account' }]}
+                        >
+                            <Select placeholder="Destination Account" size="large" style={{ width: '100%' }}>
+                                {accounts.map(a => (
+                                    <Select.Option key={a.id} value={a.id.toString()}>
+                                        {a.name}
+                                    </Select.Option>
+                                ))}
                             </Select>
-                        </div>
+                        </Form.Item>
                     </div>
 
-                    <div className="responsive-grid-2" style={{ marginBottom: '24px', gap: '24px' }}>
-                        <div className="grid gap-2">
-                            <Label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>Amount (₹)</Label>
-                            <Input type="number" required value={transferForm.amount} onChange={e => setTransferForm({...transferForm, amount: e.target.value})} placeholder="0" />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>Date</Label>
-                            <Input type="date" />
-                        </div>
+                    <div className="responsive-grid-2" style={{ gap: '24px' }}>
+                        <Form.Item
+                            label={<span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>Amount (₹)</span>}
+                            name="amount"
+                            rules={[{ required: true, message: 'Please enter amount' }]}
+                        >
+                            <Input type="number" placeholder="0" size="large" />
+                        </Form.Item>
+                        <Form.Item
+                            label={<span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>Date</span>}
+                            name="date"
+                        >
+                            <Input type="date" size="large" />
+                        </Form.Item>
                     </div>
 
-                    <Button type="submit" size="lg" className="w-full bg-[#10B981] hover:bg-[#059669] text-white">Transfer Funds</Button>
-                </form>
+                    <Form.Item style={{ marginBottom: 0 }}>
+                        <Button type="primary" htmlType="submit" block size="large">
+                            Transfer Funds
+                        </Button>
+                    </Form.Item>
+                </Form>
             </div>
         </motion.div>
     );
