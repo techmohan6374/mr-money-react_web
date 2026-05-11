@@ -1277,7 +1277,6 @@
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 8px;
   }
-}
 
   .responsive-flex-between {
     flex-direction: column;
@@ -1455,7 +1454,7 @@
   color: var(--accent-green) !important;
 }
 
-/* ===== /* ===== Two-Row SaaS Filter Layout ===== */
+/* ===== Two-Row SaaS Filter Layout ===== */
 .transactions-filter-container {
   display: flex;
   flex-direction: column;
