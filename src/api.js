@@ -7,7 +7,7 @@ import axios from 'axios'
 // ─────────────────────────────────────────────────────────────────────────────
 export const API_BASE_URL =
     // import.meta.env.VITE_API_URL || 'https://localhost:7202/api'
-    import.meta.env.VITE_API_URL || 'https://mrmoney-api.onrender.com'
+    import.meta.env.VITE_API_URL || 'https://mrmoney-api.onrender.com/api'
 
 // Axios instance — JWT token is attached automatically to every request
 const api = axios.create({
