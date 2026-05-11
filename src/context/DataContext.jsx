@@ -237,14 +237,37 @@ export function DataProvider({ children }) {
         return res.data;
     };
 
-    // Upload avatar file → Google Drive → returns updated profile
+    // Upload avatar file → Resizes to 128x128 → returns updated profile
     const uploadAvatar = async (file) => {
+        // 1. Resize image client-side to ensure it fits in Google Sheet cell limits
+        const resizedBlob = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const size = 128; // Standard avatar size
+                    canvas.width = size;
+                    canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+                    // Draw centered square crop
+                    const min = Math.min(img.width, img.height);
+                    ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, size, size);
+                    canvas.toBlob(resolve, 'image/jpeg', 0.8); // High quality JPEG
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', resizedBlob, 'avatar.jpg');
+        
         const res = await api.post('/Users/upload-avatar', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
-        // Refresh full profile so picture URL is updated everywhere
+        
+        // Refresh full profile
         const profileRes = await api.get('/Users/me');
         setUserProfile(profileRes.data);
         localStorage.setItem('user', JSON.stringify(profileRes.data));

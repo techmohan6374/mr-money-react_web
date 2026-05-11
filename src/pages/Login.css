@@ -616,9 +616,38 @@
     min-height: 100vh;
     padding: 16px;
     align-items: center;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
   }
 
   .login-card-wrapper {
-    padding: 32px 24px;
+    padding: 32px 20px;
+    width: 100%;
+    max-width: 100%;
+    box-shadow: none;
+    background: transparent;
+    border: none;
+  }
+
+  .custom-google-wrapper {
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .auth-logo img {
+    width: 64px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-card-wrapper {
+    padding: 24px 16px;
+  }
+
+  .hero-title {
+    font-size: 28px;
+  }
+
+  .custom-google-wrapper {
+    max-width: 100%;
   }
 }

@@ -46,87 +46,58 @@ export default function Transfer() {
 
             <div className="premium-card">
                 {/* Visual Diagram */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', marginBottom: '40px' }}>
-                    <div style={{ 
-                        flex: 1, 
-                        background: fromAcc ? `${fromAcc.color}15` : 'var(--hover-bg)', 
-                        borderRadius: '24px', 
-                        padding: '40px 32px', 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center', 
-                        gap: '16px',
-                        border: `2px solid ${fromAcc ? fromAcc.color : 'transparent'}`,
-                        transition: 'all 0.3s ease'
-                    }}>
-                        <div style={{ 
-                            width: '72px', 
-                            height: '72px', 
-                            borderRadius: '20px', 
-                            background: fromAcc ? fromAcc.color : 'transparent',
-                            border: fromAcc ? 'none' : '2px dashed var(--nav-border)', 
-                            color: fromAcc ? 'white' : 'var(--text-muted)', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center', 
-                            fontSize: '28px' 
-                        }}>
+                <div className="transfer-visual-container">
+                    <div 
+                        className="transfer-account-card"
+                        style={{ 
+                            background: fromAcc ? `${fromAcc.color}15` : 'var(--hover-bg)', 
+                            border: `2px solid ${fromAcc ? fromAcc.color : 'transparent'}`
+                        }}
+                    >
+                        <div 
+                            className="transfer-account-icon"
+                            style={{ 
+                                background: fromAcc ? fromAcc.color : 'transparent',
+                                border: fromAcc ? 'none' : '2px dashed var(--nav-border)', 
+                                color: fromAcc ? 'white' : 'var(--text-muted)'
+                            }}
+                        >
                             <FontAwesomeIcon icon={fromAcc ? getAccountIcon(fromAcc.type) : faWallet} />
                         </div>
-                        <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontWeight: '700', fontSize: '18px', color: fromAcc ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                        <div className="transfer-account-info">
+                            <div className="transfer-account-name" style={{ color: fromAcc ? 'var(--text-primary)' : 'var(--text-muted)' }}>
                                 {fromAcc ? fromAcc.name : 'Select Source'}
                             </div>
-                            {fromAcc && <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>{formatCurrency(fromAcc.balance)}</div>}
+                            {fromAcc && <div className="transfer-account-balance">{formatCurrency(fromAcc.balance)}</div>}
                         </div>
                     </div>
                     
-                    <div style={{ 
-                        width: '48px', 
-                        height: '48px', 
-                        borderRadius: '50%', 
-                        background: 'var(--accent-green)', 
-                        color: 'white', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)',
-                        zIndex: 2
-                    }}>
+                    <div className="transfer-icon-divider">
                         <FontAwesomeIcon icon={faExchangeAlt} />
                     </div>
 
-                    <div style={{ 
-                        flex: 1, 
-                        background: toAcc ? `${toAcc.color}15` : 'var(--hover-bg)', 
-                        borderRadius: '24px', 
-                        padding: '40px 32px', 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center', 
-                        gap: '16px',
-                        border: `2px solid ${toAcc ? toAcc.color : 'transparent'}`,
-                        transition: 'all 0.3s ease'
-                    }}>
-                        <div style={{ 
-                            width: '72px', 
-                            height: '72px', 
-                            borderRadius: '20px', 
-                            background: toAcc ? toAcc.color : 'transparent',
-                            border: toAcc ? 'none' : '2px dashed var(--nav-border)', 
-                            color: toAcc ? 'white' : 'var(--text-muted)', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center', 
-                            fontSize: '28px' 
-                        }}>
+                    <div 
+                        className="transfer-account-card"
+                        style={{ 
+                            background: toAcc ? `${toAcc.color}15` : 'var(--hover-bg)', 
+                            border: `2px solid ${toAcc ? toAcc.color : 'transparent'}`
+                        }}
+                    >
+                        <div 
+                            className="transfer-account-icon"
+                            style={{ 
+                                background: toAcc ? toAcc.color : 'transparent',
+                                border: toAcc ? 'none' : '2px dashed var(--nav-border)', 
+                                color: toAcc ? 'white' : 'var(--text-muted)'
+                            }}
+                        >
                             <FontAwesomeIcon icon={toAcc ? getAccountIcon(toAcc.type) : faWallet} />
                         </div>
-                        <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontWeight: '700', fontSize: '18px', color: toAcc ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                        <div className="transfer-account-info">
+                            <div className="transfer-account-name" style={{ color: toAcc ? 'var(--text-primary)' : 'var(--text-muted)' }}>
                                 {toAcc ? toAcc.name : 'Select Destination'}
                             </div>
-                            {toAcc && <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>{formatCurrency(toAcc.balance)}</div>}
+                            {toAcc && <div className="transfer-account-balance">{formatCurrency(toAcc.balance)}</div>}
                         </div>
                     </div>
                 </div>
