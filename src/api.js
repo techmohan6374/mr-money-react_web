@@ -6,7 +6,8 @@ import axios from 'axios'
 // Production   → update VITE_API_URL in your .env or hosting environment
 // ─────────────────────────────────────────────────────────────────────────────
 export const API_BASE_URL =
-    import.meta.env.VITE_API_URL || 'https://localhost:7202/api'
+    // import.meta.env.VITE_API_URL || 'https://localhost:7202/api'
+    import.meta.env.VITE_API_URL || 'https://mrmoney-api.onrender.com'
 
 // Axios instance — JWT token is attached automatically to every request
 const api = axios.create({
