@@ -8,6 +8,7 @@ import { faChartPie, faReceipt, faWallet, faChartSimple, faGear, faBars, faSearc
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input, Button, Select, Form, Modal, Segmented, DatePicker } from 'antd'
 import dayjs from 'dayjs'
+import { clearSessionCookie } from '../hooks/useAutoLogin'
 
 function Dashboard() {
     const navigate = useNavigate()
@@ -20,7 +21,7 @@ function Dashboard() {
     const {
         transactions, accounts, totalIncome, totalExpense, netBalance,
         addTransaction, formatCurrency, formatDate, themeMode, toggleTheme,
-        categories, addCategory
+        categories, addCategory, currencySymbol
     } = useData()
 
     const [isAddTxModalOpen, setIsAddTxModalOpen] = useState(false)
@@ -57,7 +58,8 @@ function Dashboard() {
     }, [])
 
     const logout = () => {
-        localStorage.clear()
+        clearSessionCookie()       // expire the 7-day session cookie
+        localStorage.clear()       // clear token + user from localStorage
         navigate("/")
     }
 
@@ -137,7 +139,8 @@ function Dashboard() {
 
                 <div className="sidebar-footer">
                     <div className="user-profile" onClick={() => setDropdownOpen(!dropdownOpen)}>
-                        <img src={user.picture} alt={user.name} className="user-avatar" />
+                        <img src={user.picture} alt={user.name} className="user-avatar" referrerPolicy="no-referrer" onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} />
+                        <div className="user-avatar" style={{ display:'none', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg,#10B981,#059669)', color:'white', fontWeight:'700', fontSize:'14px', borderRadius:'50%' }}>{(user.name||'').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)}</div>
                         {!isSidebarCollapsed && (
                             <div className="user-info">
                                 <span className="user-name">{user.name}</span>
@@ -209,7 +212,8 @@ function Dashboard() {
                     </div>
 
                     <div className="mobile-nav-user">
-                        <img src={user.picture} alt={user.name} />
+                        <img src={user.picture} alt={user.name} referrerPolicy="no-referrer" onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} style={{ width:'48px', height:'48px', borderRadius:'50%', objectFit:'cover' }} />
+                        <div style={{ display:'none', width:'48px', height:'48px', borderRadius:'50%', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg,#10B981,#059669)', color:'white', fontWeight:'700', fontSize:'16px' }}>{(user.name||'').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)}</div>
                         <div>
                             <div className="mnu-name">{user.name}</div>
                             <div className="mnu-email">{user.email}</div>
@@ -293,7 +297,7 @@ function Dashboard() {
                             </div>
                             <div style={{ flex: 1 }}>
                                 <Form.Item label="Amount" name="amount" rules={[{ required: true, message: 'Required' }]}>
-                                    <Input type="number" prefix="₹" size="large" placeholder="0.00" style={{ borderRadius: '10px' }} className="amount-input-compact" />
+                                    <Input type="number" prefix={currencySymbol} size="large" placeholder="0.00" style={{ borderRadius: '10px' }} className="amount-input-compact" />
                                 </Form.Item>
                             </div>
                         </div>

@@ -8,7 +8,7 @@ import { faArrowRight, faBuilding, faWallet, faCreditCard, faBank, faExchangeAlt
 import dayjs from 'dayjs';
 
 export default function Transfer() {
-    const { accounts, transferFunds, formatCurrency } = useData();
+    const { accounts, transferFunds, formatCurrency, currencySymbol } = useData();
     const [form] = Form.useForm();
     const fromAccountId = Form.useWatch('fromAccountId', form);
     const toAccountId = Form.useWatch('toAccountId', form);
@@ -169,11 +169,11 @@ export default function Transfer() {
 
                     <div className="responsive-grid-2" style={{ gap: '24px' }}>
                         <Form.Item
-                            label={<span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>Amount (₹)</span>}
+                            label={<span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>Amount ({currencySymbol})</span>}
                             name="amount"
                             rules={[{ required: true, message: 'Please enter amount' }]}
                         >
-                            <Input type="number" placeholder="0.00" size="large" prefix="₹" style={{ borderRadius: '12px' }} />
+                            <Input type="number" placeholder="0.00" size="large" prefix={currencySymbol} style={{ borderRadius: '12px' }} />
                         </Form.Item>
                         <Form.Item
                             label={<span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>Date & Time</span>}

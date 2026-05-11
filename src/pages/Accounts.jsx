@@ -58,7 +58,7 @@ function getIconForType(type) {
 }
 
 export default function Accounts() {
-    const { accounts, addAccount, deleteAccount, editAccount, formatCurrency } = useData();
+    const { accounts, addAccount, deleteAccount, editAccount, formatCurrency, currencySymbol } = useData();
     const [addForm] = Form.useForm();
     const [editForm] = Form.useForm();
 
@@ -338,7 +338,7 @@ export default function Accounts() {
 
                     <div className="responsive-grid-2" style={{ gap: '20px' }}>
                         <Form.Item
-                            label={<span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>Opening Balance (₹) *</span>}
+                            label={<span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>Opening Balance ({currencySymbol}) *</span>}
                             name="balance"
                             initialValue={0}
                             rules={[{ required: true, message: 'Please enter opening balance' }]}
@@ -413,7 +413,7 @@ export default function Accounts() {
                         </Form.Item>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                        <Form.Item label="Balance (₹)" name="balance" rules={[{ required: true }]}>
+                        <Form.Item label={`Balance (${currencySymbol})`} name="balance" rules={[{ required: true }]}>
                             <Input type="number" size="large" />
                         </Form.Item>
                         <Form.Item label="Account Type" name="type">

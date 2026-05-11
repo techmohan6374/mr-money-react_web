@@ -1,25 +1,61 @@
 import { GoogleLogin } from '@react-oauth/google'
-import axios from 'axios'
 import { useNavigate, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faWallet, faChartPie, faFilePdf, faStar, faCoins, faArrowTrendUp } from '@fortawesome/free-solid-svg-icons'
 import appLogo from '../assets/app-logo.png'
+import api from '../api'
+import { useAutoLogin, setSessionCookie } from '../hooks/useAutoLogin'
 import './Login.css'
 
 function Login() {
     const navigate = useNavigate()
     const [isLoading, setIsLoading] = useState(false)
-    
+
+    // ── Auto-login: if a valid session cookie exists, skip the login page ──────
+    const { checking } = useAutoLogin()
+
     // Force white theme on login page
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', 'light')
         localStorage.setItem('theme', 'light')
     }, [])
 
+    // ── While checking session cookie, show a minimal "Resuming…" screen ──────
+    if (checking) {
+        return (
+            <div className="login-loader-overlay" style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 9999 }}>
+                <div className="loader-card">
+                    <div className="loader-logo-ring">
+                        <div className="loader-ring-outer"></div>
+                        <div className="loader-ring-inner"></div>
+                        <div className="loader-logo-inner">
+                            <img src={appLogo} alt="Mr.Money" className="loader-logo-img" />
+                        </div>
+                    </div>
+                    <div className="loader-text-block">
+                        <h3 className="loader-title">Resuming session</h3>
+                        <p className="loader-subtitle">Welcome back to Mr.Money...</p>
+                    </div>
+                    <div className="loader-progress-track">
+                        <div className="loader-progress-bar"></div>
+                    </div>
+                    <div className="loader-steps">
+                        <span className="loader-step active">Checking session</span>
+                        <span className="loader-step-dot">•</span>
+                        <span className="loader-step">Verifying token</span>
+                        <span className="loader-step-dot">•</span>
+                        <span className="loader-step">Loading dashboard</span>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    // ── Normal login page ─────────────────────────────────────────────────────
     return (
         <div className="login-page">
-            {/* Loading Overlay */}
+            {/* Loading Overlay (shown after Google button click) */}
             {isLoading && (
                 <div className="login-loader-overlay">
                     <div className="loader-bg-glow"></div>
@@ -50,7 +86,7 @@ function Login() {
             )}
 
             <div className="login-split-container">
-                {/* Left Panel (Green Hero) */}
+                {/* Left Panel */}
                 <div className="login-left-panel">
                     <div className="hero-brand-top">
                         <span className="hero-brand-icon"><FontAwesomeIcon icon={faCoins} /></span> Mr.Money
@@ -59,7 +95,6 @@ function Login() {
                     <div className="hero-illustration">
                         <div className="wallet-outline">
                             <div className="wallet-chip"></div>
-                            {/* Floating elements */}
                             <div className="floating-circle fc-1">₹</div>
                             <div className="floating-circle fc-2">$</div>
                             <div className="floating-circle fc-3">€</div>
@@ -81,7 +116,7 @@ function Login() {
                     </div>
                 </div>
 
-                {/* Right Panel (White Auth) */}
+                {/* Right Panel */}
                 <div className="login-right-panel">
                     <div className="login-card-wrapper">
                         <div className="login-card-content">
@@ -103,25 +138,33 @@ function Login() {
                                     </svg>
                                     <span>Continue with Google</span>
                                 </button>
+
                                 <div className="google-login-invisible">
                                     <GoogleLogin
                                         onSuccess={async (credentialResponse) => {
                                             setIsLoading(true)
                                             try {
-                                                const result = await axios.post(
-                                                    'https://mrmoney-api.onrender.com/api/Auth/google-login',
+                                                const result = await api.post(
+                                                    '/Auth/google-login',
                                                     { token: credentialResponse.credential }
                                                 )
-                                                localStorage.setItem("token", result.data.jwtToken)
-                                                localStorage.setItem("user", JSON.stringify(result.data.user))
-                                                navigate("/dashboard")
+                                                const { jwtToken, user } = result.data
+
+                                                // Save to localStorage
+                                                localStorage.setItem('token', jwtToken)
+                                                localStorage.setItem('user', JSON.stringify(user))
+
+                                                // Save to cookie for auto-login next visit
+                                                setSessionCookie(jwtToken, user)
+
+                                                navigate('/dashboard')
                                             } catch (error) {
-                                                console.log(error)
+                                                console.error('Login failed:', error)
                                                 setIsLoading(false)
                                             }
                                         }}
                                         onError={() => {
-                                            console.log("Login Failed")
+                                            console.log('Google Login Failed')
                                             setIsLoading(false)
                                         }}
                                         size="large"

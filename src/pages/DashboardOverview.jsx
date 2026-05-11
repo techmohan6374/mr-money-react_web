@@ -11,7 +11,7 @@ import {
 export default function DashboardOverview() {
     const {
         totalIncome, totalExpense, netBalance, formatCurrency,
-        categoryBreakdown, weeklyChartData
+        categoryBreakdown, weeklyChartData, currencySymbol
     } = useData();
     const [showBalance, setShowBalance] = useState(true);
     const userData = localStorage.getItem("user");
@@ -42,7 +42,7 @@ export default function DashboardOverview() {
                     <div className="balance-section">
                         <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Total Balance</div>
                         <div style={{ fontSize: '32px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-primary)' }}>
-                            {showBalance ? formatCurrency(netBalance) : '₹••••••'}
+                            {showBalance ? formatCurrency(netBalance) : `${currencySymbol}••••••`}
                             <span
                                 onClick={() => setShowBalance(!showBalance)}
                                 style={{ fontSize: '16px', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px', borderRadius: '50%', transition: 'background 0.2s' }}
@@ -62,7 +62,7 @@ export default function DashboardOverview() {
                             </div>
                             <div>
                                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Monthly Income</div>
-                                <div style={{ fontWeight: '600', fontSize: '15px', color: 'var(--text-primary)' }}>{showBalance ? formatCurrency(totalIncome) : '₹••••••'}</div>
+                                <div style={{ fontWeight: '600', fontSize: '15px', color: 'var(--text-primary)' }}>{showBalance ? formatCurrency(totalIncome) : `${currencySymbol}••••••`}</div>
                             </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -71,7 +71,7 @@ export default function DashboardOverview() {
                             </div>
                             <div>
                                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Monthly Expense</div>
-                                <div style={{ fontWeight: '600', fontSize: '15px', color: 'var(--text-primary)' }}>{showBalance ? formatCurrency(totalExpense) : '₹••••••'}</div>
+                                <div style={{ fontWeight: '600', fontSize: '15px', color: 'var(--text-primary)' }}>{showBalance ? formatCurrency(totalExpense) : `${currencySymbol}••••••`}</div>
                             </div>
                         </div>
                     </div>
@@ -86,7 +86,7 @@ export default function DashboardOverview() {
                     </div>
                     <div style={{ flex: 1 }}>
                         <div className="card-label" style={{ fontSize: '13px', marginBottom: '4px' }}>Total Income</div>
-                        <div className="card-value text-income" style={{ fontSize: '24px' }}>{showBalance ? formatCurrency(totalIncome) : '₹••••••'}</div>
+                        <div className="card-value text-income" style={{ fontSize: '24px' }}>{showBalance ? formatCurrency(totalIncome) : `${currencySymbol}••••••`}</div>
                     </div>
                     <div className="card-trend up" style={{ fontSize: '12px' }}><FontAwesomeIcon icon={faArrowTrendUp} /> 12.5%</div>
                 </motion.div>
@@ -97,7 +97,7 @@ export default function DashboardOverview() {
                     </div>
                     <div style={{ flex: 1 }}>
                         <div className="card-label" style={{ fontSize: '13px', marginBottom: '4px' }}>Total Expense</div>
-                        <div className="card-value text-expense" style={{ fontSize: '24px' }}>{showBalance ? formatCurrency(totalExpense) : '₹••••••'}</div>
+                        <div className="card-value text-expense" style={{ fontSize: '24px' }}>{showBalance ? formatCurrency(totalExpense) : `${currencySymbol}••••••`}</div>
                     </div>
                     <div className="card-trend down" style={{ fontSize: '12px' }}><FontAwesomeIcon icon={faArrowTrendDown} /> 8.2%</div>
                 </motion.div>
@@ -108,7 +108,7 @@ export default function DashboardOverview() {
                     </div>
                     <div style={{ flex: 1 }}>
                         <div className="card-label" style={{ fontSize: '13px', marginBottom: '4px' }}>Net Balance</div>
-                        <div className="card-value text-balance" style={{ fontSize: '24px' }}>{showBalance ? formatCurrency(netBalance) : '₹••••••'}</div>
+                        <div className="card-value text-balance" style={{ fontSize: '24px' }}>{showBalance ? formatCurrency(netBalance) : `${currencySymbol}••••••`}</div>
                     </div>
                     <div className="card-trend up" style={{ fontSize: '12px' }}><FontAwesomeIcon icon={faArrowTrendUp} /> 4.1%</div>
                 </motion.div>
@@ -139,7 +139,7 @@ export default function DashboardOverview() {
                                     axisLine={false}
                                     tickLine={false}
                                     tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
-                                    tickFormatter={(value) => `₹${value}`}
+                                    tickFormatter={(value) => `${currencySymbol}${value}`}
                                 />
                                 <Tooltip
                                     contentStyle={{ background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--nav-border)', boxShadow: 'var(--shadow-lg)' }}

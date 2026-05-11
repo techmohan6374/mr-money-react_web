@@ -19,7 +19,7 @@ const typeFilters = [
 ];
 
 export default function Transactions() {
-    const { transactions, formatCurrency, accounts, categories, editTransaction, deleteTransaction } = useData();
+    const { transactions, formatCurrency, accounts, categories, editTransaction, deleteTransaction, currencySymbol } = useData();
     const [filterType, setFilterType] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [accountFilter, setAccountFilter] = useState('All');
@@ -351,7 +351,7 @@ export default function Transactions() {
                         </div>
                         <div style={{ flex: 1 }}>
                             <Form.Item label="Amount" name="amount" rules={[{ required: true }]}>
-                                <Input type="number" prefix="₹" size="large" style={{ borderRadius: '10px' }} />
+                                <Input type="number" prefix={currencySymbol} size="large" style={{ borderRadius: '10px' }} />
                             </Form.Item>
                         </div>
                     </div>
