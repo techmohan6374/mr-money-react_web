@@ -6,10 +6,12 @@ import { faWallet, faChartPie, faFilePdf, faStar, faCoins, faArrowTrendUp } from
 import appLogo from '../assets/app-logo.png'
 import api from '../api'
 import { useAutoLogin, setSessionCookie } from '../hooks/useAutoLogin'
+import { useData } from '../context/DataContext'
 import './Login.css'
 
 function Login() {
     const navigate = useNavigate()
+    const { loadAllData } = useData()
     const [isLoading, setIsLoading] = useState(false)
 
     // ── Auto-login: if a valid session cookie exists, skip the login page ──────
@@ -156,6 +158,9 @@ function Login() {
 
                                                 // Save to cookie for auto-login next visit
                                                 setSessionCookie(jwtToken, user)
+
+                                                // Pre-load data so dashboard is ready
+                                                loadAllData()
 
                                                 navigate('/dashboard')
                                             } catch (error) {

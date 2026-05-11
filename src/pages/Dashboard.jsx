@@ -4,7 +4,7 @@ import './Dashboard.css'
 import appLogo from '../assets/app-logo.png'
 import { useData } from '../context/DataContext'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChartPie, faReceipt, faWallet, faChartSimple, faGear, faBars, faSearch, faSun, faMoon, faBell, faPlus, faExchangeAlt, faDollarSign, faArrowTrendUp, faArrowTrendDown, faChevronDown, faUser, faSignOutAlt, faTimes, faBuilding, faMugHot, faShoppingCart, faTicket, faCheck, faBolt, faBriefcase, faChartLine, faHamburger, faGift, faHome, faUserCircle, faHeartbeat, faSliders, faArrowRight } from '@fortawesome/free-solid-svg-icons'
+import { faChartPie, faReceipt, faWallet, faChartSimple, faBars, faBarsStaggered, faSearch, faSun, faMoon, faBell, faPlus, faExchangeAlt, faDollarSign, faArrowTrendUp, faArrowTrendDown, faChevronDown, faUser, faSignOutAlt, faTimes, faBuilding, faMugHot, faShoppingCart, faTicket, faCheck, faBolt, faBriefcase, faChartLine, faHamburger, faGift, faHome, faUserCircle, faHeartbeat, faSliders, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input, Button, Select, Form, Modal, Segmented, DatePicker } from 'antd'
 import dayjs from 'dayjs'
@@ -21,8 +21,12 @@ function Dashboard() {
     const {
         transactions, accounts, totalIncome, totalExpense, netBalance,
         addTransaction, formatCurrency, formatDate, themeMode, toggleTheme,
-        categories, addCategory, currencySymbol
+        categories, addCategory, currencySymbol, loadAllData
     } = useData()
+
+    useEffect(() => {
+        loadAllData();
+    }, [loadAllData]);
 
     const [isAddTxModalOpen, setIsAddTxModalOpen] = useState(false)
     const [isAddCatModalOpen, setIsAddCatModalOpen] = useState(false)
@@ -76,6 +80,7 @@ function Dashboard() {
         { icon: <FontAwesomeIcon icon={faReceipt} />, label: "Transactions", path: "/transactions" },
         { icon: <FontAwesomeIcon icon={faExchangeAlt} />, label: "Transfers", path: "/transfers" },
         { icon: <FontAwesomeIcon icon={faChartSimple} />, label: "Reports", path: "/reports" },
+        { icon: <FontAwesomeIcon icon={faSliders} />, label: "Settings", path: "/settings" },
     ]
 
     const currentNav = navItems.find(n => n.path === location.pathname);
@@ -93,10 +98,8 @@ function Dashboard() {
 
     const handleAddTx = (values) => {
         if (values.type === 'transfer') {
-            const fromAcc = accounts.find(a => a.name === values.fromAccount);
-            const toAcc = accounts.find(a => a.name === values.toAccount);
-            if (fromAcc && toAcc) {
-                transferFunds(fromAcc.id, toAcc.id, values.amount);
+            if (values.fromAccountId && values.toAccountId) {
+                transferFunds(values.fromAccountId, values.toAccountId, values.amount);
             }
         } else {
             const formattedValues = {
@@ -139,8 +142,8 @@ function Dashboard() {
 
                 <div className="sidebar-footer">
                     <div className="user-profile" onClick={() => setDropdownOpen(!dropdownOpen)}>
-                        <img src={user.picture} alt={user.name} className="user-avatar" referrerPolicy="no-referrer" onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} />
-                        <div className="user-avatar" style={{ display:'none', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg,#10B981,#059669)', color:'white', fontWeight:'700', fontSize:'14px', borderRadius:'50%' }}>{(user.name||'').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)}</div>
+                        <img src={user.picture} alt={user.name} className="user-avatar" referrerPolicy="no-referrer" onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                        <div className="user-avatar" style={{ display: 'none', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg,#10B981,#059669)', color: 'white', fontWeight: '700', fontSize: '14px', borderRadius: '50%' }}>{(user.name || '').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}</div>
                         {!isSidebarCollapsed && (
                             <div className="user-info">
                                 <span className="user-name">{user.name}</span>
@@ -153,8 +156,7 @@ function Dashboard() {
                                 <div className="dh-name">{user.name}</div>
                                 <div className="dh-email">{user.email}</div>
                             </div>
-                            <button className="dropdown-item"><span className="di-icon"><FontAwesomeIcon icon={faUser} /></span> My Profile</button>
-                            <button className="dropdown-item" onClick={() => navigate('/settings')}><span className="di-icon"><FontAwesomeIcon icon={faGear} /></span> Settings</button>
+                            <button className="dropdown-item" onClick={() => navigate('/settings')}><span className="di-icon"><FontAwesomeIcon icon={faSliders} /></span> Settings</button>
                             <div className="dropdown-divider"></div>
                             <button className="dropdown-item danger" onClick={logout}><span className="di-icon"><FontAwesomeIcon icon={faSignOutAlt} /></span> Logout</button>
                         </div>
@@ -167,10 +169,10 @@ function Dashboard() {
                 <header className={`dashboard-header ${scrolled ? 'scrolled' : ''}`}>
                     <div className="header-left" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         <button className="sidebar-toggle-btn mobile-only" onClick={() => setMobileMenuOpen(true)}>
-                            <FontAwesomeIcon icon={faBars} />
+                            <FontAwesomeIcon icon={faBarsStaggered} />
                         </button>
                         <button className="sidebar-toggle-btn desktop-only" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} style={{ background: 'transparent', border: 'none', fontSize: '20px', color: 'var(--text-secondary)' }}>
-                            <FontAwesomeIcon icon={faBars} />
+                            <FontAwesomeIcon icon={faBarsStaggered} />
                         </button>
                         <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '500', color: 'var(--text-primary)' }}>{pageTitle}</h2>
                     </div>
@@ -212,8 +214,8 @@ function Dashboard() {
                     </div>
 
                     <div className="mobile-nav-user">
-                        <img src={user.picture} alt={user.name} referrerPolicy="no-referrer" onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} style={{ width:'48px', height:'48px', borderRadius:'50%', objectFit:'cover' }} />
-                        <div style={{ display:'none', width:'48px', height:'48px', borderRadius:'50%', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg,#10B981,#059669)', color:'white', fontWeight:'700', fontSize:'16px' }}>{(user.name||'').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)}</div>
+                        <img src={user.picture} alt={user.name} referrerPolicy="no-referrer" onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
+                        <div style={{ display: 'none', width: '48px', height: '48px', borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg,#10B981,#059669)', color: 'white', fontWeight: '700', fontSize: '16px' }}>{(user.name || '').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}</div>
                         <div>
                             <div className="mnu-name">{user.name}</div>
                             <div className="mnu-email">{user.email}</div>
@@ -315,21 +317,21 @@ function Dashboard() {
                             <div style={{ flex: 1 }}>
                                 {txType === 'transfer' ? (
                                     <div style={{ display: 'flex', gap: '8px' }}>
-                                        <Form.Item label="From" name="fromAccount" rules={[{ required: true }]} style={{ flex: 1 }}>
+                                        <Form.Item label="From" name="fromAccountId" rules={[{ required: true }]} style={{ flex: 1 }}>
                                             <Select size="large" placeholder="From">
-                                                {accounts?.map(acc => <Select.Option key={acc.id} value={acc.name}>{acc.name}</Select.Option>)}
+                                                {accounts?.map(acc => <Select.Option key={acc.id} value={acc.id}>{acc.name}</Select.Option>)}
                                             </Select>
                                         </Form.Item>
-                                        <Form.Item label="To" name="toAccount" rules={[{ required: true }]} style={{ flex: 1 }}>
+                                        <Form.Item label="To" name="toAccountId" rules={[{ required: true }]} style={{ flex: 1 }}>
                                             <Select size="large" placeholder="To">
-                                                {accounts?.map(acc => <Select.Option key={acc.id} value={acc.name}>{acc.name}</Select.Option>)}
+                                                {accounts?.map(acc => <Select.Option key={acc.id} value={acc.id}>{acc.name}</Select.Option>)}
                                             </Select>
                                         </Form.Item>
                                     </div>
                                 ) : (
-                                    <Form.Item label="Account" name="account">
+                                    <Form.Item label="Account" name="accountId">
                                         <Select size="large" style={{ width: '100%', borderRadius: '10px' }} placeholder="Select Account">
-                                            {accounts?.map(acc => <Select.Option key={acc.id} value={acc.name}>{acc.name}</Select.Option>)}
+                                            {accounts?.map(acc => <Select.Option key={acc.id} value={acc.id}>{acc.name}</Select.Option>)}
                                         </Select>
                                     </Form.Item>
                                 )}

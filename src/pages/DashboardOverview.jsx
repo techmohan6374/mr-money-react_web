@@ -11,8 +11,34 @@ import {
 export default function DashboardOverview() {
     const {
         totalIncome, totalExpense, netBalance, formatCurrency,
-        categoryBreakdown, weeklyChartData, currencySymbol
+        categoryBreakdown, weeklyChartData, currencySymbol, loading, error
     } = useData();
+
+    if (error && netBalance === 0) {
+        return (
+            <div className="premium-card" style={{ padding: '48px', textAlign: 'center', margin: '24px' }}>
+                <div style={{ fontSize: '40px', marginBottom: '16px' }}>⚠️</div>
+                <h3 style={{ color: 'var(--accent-red)', marginBottom: '8px' }}>Failed to load data</h3>
+                <p style={{ color: 'var(--text-muted)' }}>{error}</p>
+                <button 
+                    onClick={() => window.location.reload()}
+                    style={{ marginTop: '20px', padding: '10px 24px', background: 'var(--accent-green)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
+                >
+                    Try Again
+                </button>
+            </div>
+        );
+    }
+
+    if (loading && netBalance === 0) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '20px' }}>
+                <div className="loader-ring-outer" style={{ width: '60px', height: '60px', border: '4px solid var(--nav-border)', borderTopColor: 'var(--accent-green)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                <p style={{ color: 'var(--text-muted)', fontWeight: '500' }}>Loading your financial overview...</p>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+        );
+    }
     const [showBalance, setShowBalance] = useState(true);
     const userData = localStorage.getItem("user");
     const user = userData ? JSON.parse(userData) : {};

@@ -367,9 +367,9 @@ export default function Transactions() {
                             </Form.Item>
                         </div>
                         <div style={{ flex: 1 }}>
-                            <Form.Item label="Account" name="account">
+                            <Form.Item label="Account" name="accountId">
                                 <Select size="large" style={{ width: '100%', borderRadius: '10px' }}>
-                                    {accounts?.map(acc => <Select.Option key={acc.id} value={acc.name}>{acc.name}</Select.Option>)}
+                                    {accounts?.map(acc => <Select.Option key={acc.id} value={acc.id}>{acc.name}</Select.Option>)}
                                 </Select>
                             </Form.Item>
                         </div>

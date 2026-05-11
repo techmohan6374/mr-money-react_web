@@ -46,8 +46,17 @@ export function DataProvider({ children }) {
                 api.get('/categories'),
                 api.get('/Users/me'),
             ]);
-            setAccounts(accRes.data ?? []);
-            setTransactions(txRes.data.items ?? txRes.data ?? []);
+            const accs = accRes.data ?? [];
+            const rawTxs = txRes.data.items ?? txRes.data ?? [];
+            
+            // Enrich transactions with account names
+            const enrichedTxs = rawTxs.map(t => ({
+                ...t,
+                account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
+            }));
+
+            setAccounts(accs);
+            setTransactions(enrichedTxs);
             setCategories(catRes.data ?? []);
             setUserProfile(profileRes.data);
             localStorage.setItem('user', JSON.stringify(profileRes.data));
@@ -108,9 +117,21 @@ export function DataProvider({ children }) {
             description: newTx.description || '',
             date:        newTx.date || new Date().toISOString(),
         });
-        setTransactions(prev => [res.data, ...prev]);
-        const accRes = await api.get('/accounts');
-        setAccounts(accRes.data ?? []);
+        // Refresh accounts and transactions to get enriched data
+        const [accRes, txRes] = await Promise.all([
+            api.get('/accounts'),
+            api.get('/transactions?pageSize=500'),
+        ]);
+        
+        const accs = accRes.data ?? [];
+        const rawTxs = txRes.data.items ?? txRes.data ?? [];
+        const enrichedTxs = rawTxs.map(t => ({
+            ...t,
+            account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
+        }));
+
+        setAccounts(accs);
+        setTransactions(enrichedTxs);
         return res.data;
     };
 
@@ -124,13 +145,41 @@ export function DataProvider({ children }) {
             description: updates.description,
             date:        updates.date,
         });
-        setTransactions(prev => prev.map(t => t.id === id ? res.data : t));
+        // Refresh accounts and transactions to get enriched data
+        const [accRes, txRes] = await Promise.all([
+            api.get('/accounts'),
+            api.get('/transactions?pageSize=500'),
+        ]);
+        
+        const accs = accRes.data ?? [];
+        const rawTxs = txRes.data.items ?? txRes.data ?? [];
+        const enrichedTxs = rawTxs.map(t => ({
+            ...t,
+            account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
+        }));
+
+        setAccounts(accs);
+        setTransactions(enrichedTxs);
         return res.data;
     };
 
     const deleteTransaction = async (id) => {
         await api.delete(`/transactions/${id}`);
-        setTransactions(prev => prev.filter(t => t.id !== id));
+        // Refresh accounts and transactions to get enriched data
+        const [accRes, txRes] = await Promise.all([
+            api.get('/accounts'),
+            api.get('/transactions?pageSize=500'),
+        ]);
+        
+        const accs = accRes.data ?? [];
+        const rawTxs = txRes.data.items ?? txRes.data ?? [];
+        const enrichedTxs = rawTxs.map(t => ({
+            ...t,
+            account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
+        }));
+
+        setAccounts(accs);
+        setTransactions(enrichedTxs);
     };
 
     const transferFunds = async (fromId, toId, amount) => {
@@ -143,8 +192,15 @@ export function DataProvider({ children }) {
             api.get('/accounts'),
             api.get('/transactions?pageSize=500'),
         ]);
-        setAccounts(accRes.data ?? []);
-        setTransactions(txRes.data.items ?? txRes.data ?? []);
+        const accs = accRes.data ?? [];
+        const rawTxs = txRes.data.items ?? txRes.data ?? [];
+        const enrichedTxs = rawTxs.map(t => ({
+            ...t,
+            account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
+        }));
+
+        setAccounts(accs);
+        setTransactions(enrichedTxs);
         return res.data;
     };
 
