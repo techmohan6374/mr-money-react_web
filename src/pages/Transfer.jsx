@@ -17,7 +17,13 @@ export default function Transfer() {
     const toAcc = accounts.find(a => a.id.toString() === toAccountId);
 
     const handleTransfer = (values) => {
-        transferFunds(values.fromAccountId, values.toAccountId, Number(values.amount));
+        const transferData = {
+            fromAccountId: values.fromAccountId,
+            toAccountId: values.toAccountId,
+            amount: Number(values.amount),
+            date: values.date ? dayjs(values.date).toISOString() : new Date().toISOString()
+        };
+        transferFunds(transferData.fromAccountId, transferData.toAccountId, transferData.amount);
         message.success('Funds transferred successfully');
         form.resetFields();
     };
@@ -102,7 +108,9 @@ export default function Transfer() {
                     </div>
                 </div>
 
-                <Form form={form} layout="vertical" onFinish={handleTransfer}>
+                <Form form={form} layout="vertical" onFinish={handleTransfer} initialValues={{
+                    date: dayjs().format('YYYY-MM-DD HH:mm')
+                }}>
                     <div className="responsive-grid-2" style={{ gap: '24px' }}>
                         <Form.Item
                             label={<span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '500', textTransform: 'uppercase' }}>Select Source Account</span>}

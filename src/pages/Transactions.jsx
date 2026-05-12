@@ -58,7 +58,7 @@ export default function Transactions() {
         setEditingTransaction(record);
         form.setFieldsValue({
             ...record,
-            date: record.date ? dayjs(record.date) : null
+            date: record.date ? dayjs(record.date).format('YYYY-MM-DD HH:mm') : dayjs().format('YYYY-MM-DD HH:mm')
         });
         setIsEditModalOpen(true);
     };
@@ -66,7 +66,7 @@ export default function Transactions() {
     const handleUpdate = (values) => {
         editTransaction(editingTransaction.id, {
             ...values,
-            date: values.date.toISOString()
+            date: dayjs(values.date).toISOString()
         });
         setIsEditModalOpen(false);
         message.success('Transaction updated successfully');

@@ -104,7 +104,7 @@ function Dashboard() {
         } else {
             const formattedValues = {
                 ...values,
-                date: values.date ? values.date.toISOString() : new Date().toISOString()
+                date: values.date ? dayjs(values.date).toISOString() : new Date().toISOString()
             }
             addTransaction(formattedValues)
         }
@@ -272,7 +272,7 @@ function Dashboard() {
                         initialValues={{
                             type: 'expense',
                             category: 'Others',
-                            date: dayjs()
+                            date: dayjs().format('YYYY-MM-DD HH:mm')
                         }}
                         style={{ marginTop: '16px' }}
                     >
