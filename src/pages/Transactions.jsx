@@ -43,15 +43,7 @@ export default function Transactions() {
     }
 
     const formatDateTime = (isoString) => {
-        const date = new Date(isoString);
-        return date.toLocaleString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true 
-        });
+        return dayjs(isoString).format('MMM D, YYYY h:mm A');
     }
 
     const handleEdit = (record) => {
@@ -66,7 +58,7 @@ export default function Transactions() {
     const handleUpdate = (values) => {
         editTransaction(editingTransaction.id, {
             ...values,
-            date: dayjs(values.date).toISOString()
+            date: values.date.toISOString()
         });
         setIsEditModalOpen(false);
         message.success('Transaction updated successfully');

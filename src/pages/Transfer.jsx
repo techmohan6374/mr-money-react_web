@@ -21,7 +21,7 @@ export default function Transfer() {
             fromAccountId: values.fromAccountId,
             toAccountId: values.toAccountId,
             amount: Number(values.amount),
-            date: values.date ? dayjs(values.date).toISOString() : new Date().toISOString()
+            date: values.date.toISOString()
         };
         transferFunds(transferData.fromAccountId, transferData.toAccountId, transferData.amount);
         message.success('Funds transferred successfully');

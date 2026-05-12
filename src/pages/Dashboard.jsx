@@ -104,7 +104,7 @@ function Dashboard() {
         } else {
             const formattedValues = {
                 ...values,
-                date: values.date ? dayjs(values.date).toISOString() : new Date().toISOString()
+                date: values.date.toISOString()
             }
             addTransaction(formattedValues)
         }
