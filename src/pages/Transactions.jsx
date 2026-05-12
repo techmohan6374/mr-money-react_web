@@ -1,3 +1,5 @@
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
 import React from 'react';
 import './Dashboard.css';
 import { useData } from '../context/DataContext';
@@ -41,15 +43,12 @@ export default function Transactions() {
         }
         return <FontAwesomeIcon icon={faReceipt} />;
     }
-
     const formatDateTime = (isoString) => {
         if (!isoString) return '-';
 
         return dayjs(isoString)
-            .local()
             .format('MMM D, YYYY hh:mm A');
     }
-
     const handleEdit = (record) => {
         setEditingTransaction(record);
         form.setFieldsValue({
