@@ -109,7 +109,7 @@ export default function Transfer() {
                 </div>
 
                 <Form form={form} layout="vertical" onFinish={handleTransfer} initialValues={{
-                    date: dayjs().format('YYYY-MM-DD HH:mm')
+                    date: dayjs()
                 }}>
                     <div className="responsive-grid-2" style={{ gap: '24px' }}>
                         <Form.Item

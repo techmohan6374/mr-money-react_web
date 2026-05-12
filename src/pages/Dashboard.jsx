@@ -272,7 +272,7 @@ function Dashboard() {
                         initialValues={{
                             type: 'expense',
                             category: 'Others',
-                            date: dayjs().format('YYYY-MM-DD HH:mm')
+                            date: dayjs()
                         }}
                         style={{ marginTop: '16px' }}
                     >

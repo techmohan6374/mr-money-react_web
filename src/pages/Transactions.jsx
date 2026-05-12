@@ -58,7 +58,7 @@ export default function Transactions() {
         setEditingTransaction(record);
         form.setFieldsValue({
             ...record,
-            date: record.date ? dayjs(record.date).format('YYYY-MM-DD HH:mm') : dayjs().format('YYYY-MM-DD HH:mm')
+            date: record.date ? dayjs(record.date) : dayjs()
         });
         setIsEditModalOpen(true);
     };
