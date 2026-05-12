@@ -9,18 +9,18 @@ export function useData() {
 
 // Currency symbol lookup — defined outside component so it never re-creates
 const CURRENCY_SYMBOLS = { INR: '\u20B9', USD: '$', EUR: '\u20AC', GBP: '\u00A3', JPY: '\u00A5' };
-const CURRENCY_LOCALE  = { INR: 'en-IN' };
+const CURRENCY_LOCALE = { INR: 'en-IN' };
 
 export function DataProvider({ children }) {
 
-    const [accounts,     setAccounts]     = useState([]);
+    const [accounts, setAccounts] = useState([]);
     const [transactions, setTransactions] = useState([]);
-    const [categories,   setCategories]   = useState([]);
-    const [userProfile,  setUserProfile]  = useState(() => {
+    const [categories, setCategories] = useState([]);
+    const [userProfile, setUserProfile] = useState(() => {
         try { return JSON.parse(localStorage.getItem('user')) || null; } catch { return null; }
     });
     const [loading, setLoading] = useState(false);
-    const [error,   setError]   = useState(null);
+    const [error, setError] = useState(null);
 
     const [themeMode, setThemeMode] = useState(() => localStorage.getItem('theme') || 'light');
 
@@ -48,7 +48,7 @@ export function DataProvider({ children }) {
             ]);
             const accs = accRes.data ?? [];
             const rawTxs = txRes.data.items ?? txRes.data ?? [];
-            
+
             // Enrich transactions with account names
             const enrichedTxs = rawTxs.map(t => ({
                 ...t,
@@ -76,11 +76,11 @@ export function DataProvider({ children }) {
 
     const addAccount = async (newAcc) => {
         const res = await api.post('/accounts', {
-            name:      newAcc.name,
+            name: newAcc.name,
             holderName: newAcc.holderName,
-            balance:   parseFloat(newAcc.balance) || 0,
-            type:      newAcc.type,
-            color:     newAcc.color,
+            balance: parseFloat(newAcc.balance) || 0,
+            type: newAcc.type,
+            color: newAcc.color,
             isDefault: newAcc.isDefault ?? false,
         });
         setAccounts(prev => [res.data, ...prev]);
@@ -89,11 +89,11 @@ export function DataProvider({ children }) {
 
     const editAccount = async (id, updates) => {
         const res = await api.put(`/accounts/${id}`, {
-            name:      updates.name,
+            name: updates.name,
             holderName: updates.holderName,
-            balance:   updates.balance !== undefined ? parseFloat(updates.balance) : undefined,
-            type:      updates.type,
-            color:     updates.color,
+            balance: updates.balance !== undefined ? parseFloat(updates.balance) : undefined,
+            type: updates.type,
+            color: updates.color,
             isDefault: updates.isDefault,
         });
         setAccounts(prev => prev.map(a => a.id === id ? res.data : a));
@@ -109,20 +109,20 @@ export function DataProvider({ children }) {
 
     const addTransaction = async (newTx) => {
         const res = await api.post('/transactions', {
-            name:        newTx.name,
-            category:    newTx.category,
-            amount:      parseFloat(newTx.amount),
-            type:        newTx.type,
-            accountId:   newTx.accountId?.toString(),
+            name: newTx.name,
+            category: newTx.category,
+            amount: parseFloat(newTx.amount),
+            type: newTx.type,
+            accountId: newTx.accountId?.toString(),
             description: newTx.description || '',
-            date:        newTx.date || new Date().toISOString(),
+            date: newTx.date || new Date().toISOString(),
         });
         // Refresh accounts and transactions to get enriched data
         const [accRes, txRes] = await Promise.all([
             api.get('/accounts'),
             api.get('/transactions?pageSize=500'),
         ]);
-        
+
         const accs = accRes.data ?? [];
         const rawTxs = txRes.data.items ?? txRes.data ?? [];
         const enrichedTxs = rawTxs.map(t => ({
@@ -137,20 +137,20 @@ export function DataProvider({ children }) {
 
     const editTransaction = async (id, updates) => {
         const res = await api.put(`/transactions/${id}`, {
-            name:        updates.name,
-            category:    updates.category,
-            amount:      updates.amount !== undefined ? parseFloat(updates.amount) : undefined,
-            type:        updates.type,
-            accountId:   updates.accountId?.toString(),
+            name: updates.name,
+            category: updates.category,
+            amount: updates.amount !== undefined ? parseFloat(updates.amount) : undefined,
+            type: updates.type,
+            accountId: updates.accountId?.toString(),
             description: updates.description,
-            date:        updates.date,
+            date: updates.date,
         });
         // Refresh accounts and transactions to get enriched data
         const [accRes, txRes] = await Promise.all([
             api.get('/accounts'),
             api.get('/transactions?pageSize=500'),
         ]);
-        
+
         const accs = accRes.data ?? [];
         const rawTxs = txRes.data.items ?? txRes.data ?? [];
         const enrichedTxs = rawTxs.map(t => ({
@@ -170,7 +170,7 @@ export function DataProvider({ children }) {
             api.get('/accounts'),
             api.get('/transactions?pageSize=500'),
         ]);
-        
+
         const accs = accRes.data ?? [];
         const rawTxs = txRes.data.items ?? txRes.data ?? [];
         const enrichedTxs = rawTxs.map(t => ({
@@ -182,11 +182,12 @@ export function DataProvider({ children }) {
         setTransactions(enrichedTxs);
     };
 
-    const transferFunds = async (fromId, toId, amount) => {
+    const transferFunds = async (fromId, toId, amount, date) => {
         const res = await api.post('/transactions/transfer', {
             fromAccountId: fromId?.toString(),
-            toAccountId:   toId?.toString(),
-            amount:        parseFloat(amount),
+            toAccountId: toId?.toString(),
+            amount: parseFloat(amount),
+            date: date
         });
         const [accRes, txRes] = await Promise.all([
             api.get('/accounts'),
@@ -208,10 +209,10 @@ export function DataProvider({ children }) {
 
     const addCategory = async (newCat) => {
         const res = await api.post('/categories', {
-            name:  newCat.name,
-            icon:  newCat.icon,
+            name: newCat.name,
+            icon: newCat.icon,
             color: newCat.color,
-            type:  newCat.type,
+            type: newCat.type,
         });
         setCategories(prev => [...prev, res.data]);
         return res.data;
@@ -221,10 +222,10 @@ export function DataProvider({ children }) {
 
     const updateUserProfile = async (updates) => {
         const payload = {
-            name:               updates.name,
-            currency:           updates.currency,
+            name: updates.name,
+            currency: updates.currency,
             emailNotifications: updates.emailNotifications,
-            theme:              updates.theme,
+            theme: updates.theme,
         };
         // Only include picture if it's a URL (not base64 — that goes via uploadAvatar)
         if (updates.picture && updates.picture.startsWith('http')) {
@@ -262,11 +263,11 @@ export function DataProvider({ children }) {
 
         const formData = new FormData();
         formData.append('file', resizedBlob, 'avatar.jpg');
-        
+
         const res = await api.post('/Users/upload-avatar', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
-        
+
         // Refresh full profile
         const profileRes = await api.get('/Users/me');
         setUserProfile(profileRes.data);
@@ -276,33 +277,33 @@ export function DataProvider({ children }) {
 
     // ── Formatters ────────────────────────────────────────────────────────────
 
-    const currency       = userProfile?.currency || 'INR';
+    const currency = userProfile?.currency || 'INR';
     const currencySymbol = CURRENCY_SYMBOLS[currency] || currency;
-    const currencyLocale = CURRENCY_LOCALE[currency]  || 'en-US';
+    const currencyLocale = CURRENCY_LOCALE[currency] || 'en-US';
 
     const formatCurrency = useCallback((amount) =>
         new Intl.NumberFormat(currencyLocale, {
-            style:                 'currency',
-            currency:              currency,
+            style: 'currency',
+            currency: currency,
             minimumFractionDigits: 2,
         }).format(amount || 0),
-    [currency, currencyLocale]);
+        [currency, currencyLocale]);
 
     const formatDate = (isoString) => {
-        const date      = new Date(isoString);
-        const today     = new Date();
+        const date = new Date(isoString);
+        const today = new Date();
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        if (date.toDateString() === today.toDateString())     return 'Today';
+        if (date.toDateString() === today.toDateString()) return 'Today';
         if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
     // ── Derived values ────────────────────────────────────────────────────────
 
-    const totalIncome  = useMemo(() => transactions.filter(t => t.type === 'income') .reduce((s, t) => s + (parseFloat(t.amount) || 0), 0), [transactions]);
+    const totalIncome = useMemo(() => transactions.filter(t => t.type === 'income').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0), [transactions]);
     const totalExpense = useMemo(() => transactions.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0), [transactions]);
-    const netBalance   = useMemo(() => accounts.reduce((s, a) => s + (parseFloat(a.balance) || 0), 0), [accounts]);
+    const netBalance = useMemo(() => accounts.reduce((s, a) => s + (parseFloat(a.balance) || 0), 0), [accounts]);
 
     const todayTxCount = useMemo(() => {
         const today = new Date().toDateString();
@@ -334,7 +335,7 @@ export function DataProvider({ children }) {
     }, [transactions]);
 
     const categoryBreakdown = useMemo(() => {
-        const catMap   = {};
+        const catMap = {};
         const totalExp = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
         transactions.filter(t => t.type === 'expense').forEach(t => {
             catMap[t.category] = (catMap[t.category] || 0) + (parseFloat(t.amount) || 0);
@@ -345,7 +346,7 @@ export function DataProvider({ children }) {
             .map(([cat, amount], i) => ({
                 cat,
                 amount,
-                pct:   totalExp > 0 ? `${Math.round((amount / totalExp) * 100)}%` : '0%',
+                pct: totalExp > 0 ? `${Math.round((amount / totalExp) * 100)}%` : '0%',
                 color: COLORS[i % COLORS.length],
             }));
     }, [transactions]);
@@ -353,11 +354,11 @@ export function DataProvider({ children }) {
     const weeklyChartData = useMemo(() => {
         const days = [];
         for (let i = 6; i >= 0; i--) {
-            const d       = new Date();
+            const d = new Date();
             d.setDate(d.getDate() - i);
-            const label   = d.toLocaleDateString('en-US', { weekday: 'short' });
+            const label = d.toLocaleDateString('en-US', { weekday: 'short' });
             const dateStr = d.toDateString();
-            const income  = transactions.filter(t => t.type === 'income'  && new Date(t.date).toDateString() === dateStr).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+            const income = transactions.filter(t => t.type === 'income' && new Date(t.date).toDateString() === dateStr).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
             const expense = transactions.filter(t => t.type === 'expense' && new Date(t.date).toDateString() === dateStr).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
             days.push({ name: label, income, expense });
         }

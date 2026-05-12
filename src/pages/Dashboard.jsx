@@ -97,21 +97,32 @@ function Dashboard() {
     }
 
     const handleAddTx = (values) => {
+        const selectedDate =
+            values.date
+                ? dayjs(values.date).format('YYYY-MM-DDTHH:mm:ss')
+                : dayjs().format('YYYY-MM-DDTHH:mm:ss');
+
         if (values.type === 'transfer') {
             if (values.fromAccountId && values.toAccountId) {
-                transferFunds(values.fromAccountId, values.toAccountId, values.amount);
+                transferFunds(
+                    values.fromAccountId,
+                    values.toAccountId,
+                    values.amount,
+                    selectedDate
+                );
             }
         } else {
             const formattedValues = {
                 ...values,
-                date: values.date.toISOString()
-            }
-            addTransaction(formattedValues)
-        }
-        setIsAddTxModalOpen(false)
-        form.resetFields()
-    }
+                date: selectedDate
+            };
 
+            addTransaction(formattedValues);
+        }
+
+        setIsAddTxModalOpen(false);
+        form.resetFields();
+    }
     return (
         <div className={`dashboard-page ${themeMode} layout-sidebar`}>
             {/* Desktop Sidebar */}

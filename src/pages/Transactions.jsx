@@ -24,7 +24,7 @@ export default function Transactions() {
     const [searchQuery, setSearchQuery] = useState('');
     const [accountFilter, setAccountFilter] = useState('All');
     const [dateRange, setDateRange] = useState(null);
-    
+
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState(null);
     const [form] = Form.useForm();
@@ -43,7 +43,11 @@ export default function Transactions() {
     }
 
     const formatDateTime = (isoString) => {
-        return dayjs(isoString).format('MMM D, YYYY h:mm A');
+        if (!isoString) return '-';
+
+        return dayjs(isoString)
+            .local()
+            .format('MMM D, YYYY hh:mm A');
     }
 
     const handleEdit = (record) => {
@@ -66,17 +70,17 @@ export default function Transactions() {
 
     const filteredTransactions = transactions.filter(tx => {
         const matchesType = filterType === 'All' || tx.type?.toLowerCase() === filterType.toLowerCase();
-        const matchesSearch = tx.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                             tx.category?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = tx.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            tx.category?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesAccount = accountFilter === 'All' || tx.account === accountFilter;
-        
+
         let matchesDate = true;
         if (dateRange && dateRange[0] && dateRange[1]) {
             const txDate = dayjs(tx.date);
-            matchesDate = txDate.isAfter(dateRange[0].startOf('day')) && 
-                          txDate.isBefore(dateRange[1].endOf('day'));
+            matchesDate = txDate.isAfter(dateRange[0].startOf('day')) &&
+                txDate.isBefore(dateRange[1].endOf('day'));
         }
-        
+
         return matchesType && matchesSearch && matchesAccount && matchesDate;
     });
 
@@ -99,7 +103,7 @@ export default function Transactions() {
         const worksheet = XLSX.utils.json_to_sheet(dataToExport);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
-        
+
         const maxWidths = Object.keys(dataToExport[0]).map(key => ({
             wch: Math.max(key.length, ...dataToExport.map(row => row[key]?.toString().length || 0)) + 2
         }));
@@ -110,8 +114,8 @@ export default function Transactions() {
     };
 
     return (
-        <motion.div 
-            className="page-container" 
+        <motion.div
+            className="page-container"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -132,7 +136,7 @@ export default function Transactions() {
 
             <div className="tx-tabs">
                 {typeFilters.map(tab => (
-                    <button 
+                    <button
                         key={tab.key}
                         className={`tx-tab ${filterType === tab.key ? 'active' : ''}`}
                         onClick={() => setFilterType(tab.key)}
@@ -146,7 +150,7 @@ export default function Transactions() {
             <div className="tx-filter-bar">
                 <div className="tx-search-box">
                     <FontAwesomeIcon icon={faSearch} className="tx-search-icon" />
-                    <input 
+                    <input
                         type="text"
                         placeholder="Search transactions..."
                         value={searchQuery}
@@ -168,7 +172,7 @@ export default function Transactions() {
                         ))}
                     </Select>
                     <div className="tx-filter-divider" />
-                    <RangePicker 
+                    <RangePicker
                         className="tx-filter-datepicker"
                         variant="borderless"
                         onChange={setDateRange}
@@ -179,7 +183,7 @@ export default function Transactions() {
             </div>
 
             <div className="tx-table-wrap">
-                <Table 
+                <Table
                     dataSource={filteredTransactions}
                     columns={[
                         {
@@ -207,14 +211,14 @@ export default function Transactions() {
                                 if (type === 'income') { color = 'success'; icon = faArrowTrendUp; }
                                 else if (type === 'expense') { color = 'error'; icon = faArrowTrendDown; }
                                 else if (type === 'transfer') { color = 'processing'; icon = faExchangeAlt; }
-                                
+
                                 return (
-                                    <Tag 
-                                        color={color} 
-                                        style={{ 
-                                            borderRadius: '6px', 
-                                            textTransform: 'capitalize', 
-                                            fontWeight: '600', 
+                                    <Tag
+                                        color={color}
+                                        style={{
+                                            borderRadius: '6px',
+                                            textTransform: 'capitalize',
+                                            fontWeight: '600',
                                             padding: '4px 12px',
                                             display: 'inline-flex',
                                             alignItems: 'center',
@@ -249,11 +253,11 @@ export default function Transactions() {
                             align: 'right',
                             sorter: (a, b) => a.amount - b.amount,
                             render: (amount, record) => (
-                                <span style={{ 
-                                    fontWeight: '700', 
+                                <span style={{
+                                    fontWeight: '700',
                                     fontSize: '15px',
-                                    color: record.type === 'income' ? 'var(--accent-green)' : 
-                                           record.type === 'transfer' ? 'var(--accent-blue)' : 'var(--text-primary)' 
+                                    color: record.type === 'income' ? 'var(--accent-green)' :
+                                        record.type === 'transfer' ? 'var(--accent-blue)' : 'var(--text-primary)'
                                 }}>
                                     {record.type === 'income' ? '+' : record.type === 'transfer' ? '' : '-'} {formatCurrency(amount)}
                                 </span>
@@ -266,9 +270,9 @@ export default function Transactions() {
                             width: 100,
                             render: (_, record) => (
                                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                                    <Button 
-                                        type="text" 
-                                        icon={<FontAwesomeIcon icon={faEdit} style={{ color: 'var(--accent-green)' }} />} 
+                                    <Button
+                                        type="text"
+                                        icon={<FontAwesomeIcon icon={faEdit} style={{ color: 'var(--accent-green)' }} />}
                                         onClick={() => handleEdit(record)}
                                     />
                                     <Popconfirm
@@ -282,10 +286,10 @@ export default function Transactions() {
                                         cancelText="No"
                                         okButtonProps={{ danger: true }}
                                     >
-                                        <Button 
-                                            type="text" 
-                                            danger 
-                                            icon={<FontAwesomeIcon icon={faTrash} />} 
+                                        <Button
+                                            type="text"
+                                            danger
+                                            icon={<FontAwesomeIcon icon={faTrash} />}
                                         />
                                     </Popconfirm>
                                 </div>
@@ -366,11 +370,11 @@ export default function Transactions() {
                             </Form.Item>
                         </div>
                     </div>
-                    
+
                     <Form.Item label="Category" name="category" className="category-item-custom">
                         <div className="category-chip-grid">
                             {categories.filter(cat => cat.type === txType || cat.type === 'all').map(cat => (
-                                <div 
+                                <div
                                     key={cat.name}
                                     className={`category-chip ${form.getFieldValue('category') === cat.name ? 'active' : ''}`}
                                     onClick={() => {
