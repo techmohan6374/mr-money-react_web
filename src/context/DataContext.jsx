@@ -108,101 +108,121 @@ export function DataProvider({ children }) {
     // ── Transactions ──────────────────────────────────────────────────────────
 
     const addTransaction = async (newTx) => {
-        const res = await api.post('/transactions', {
-            name: newTx.name,
-            category: newTx.category,
-            amount: parseFloat(newTx.amount),
-            type: newTx.type,
-            accountId: newTx.accountId?.toString(),
-            description: newTx.description || '',
-            date: newTx.date || new Date().toISOString(),
-        });
-        // Refresh accounts and transactions to get enriched data
-        const [accRes, txRes] = await Promise.all([
-            api.get('/accounts'),
-            api.get('/transactions?pageSize=500'),
-        ]);
+        setLoading(true);
+        try {
+            const res = await api.post('/transactions', {
+                name: newTx.name,
+                category: newTx.category,
+                amount: parseFloat(newTx.amount),
+                type: newTx.type,
+                accountId: newTx.accountId?.toString(),
+                description: newTx.description || '',
+                date: newTx.date || new Date().toISOString(),
+            });
+            // Refresh accounts and transactions to get enriched data
+            const [accRes, txRes] = await Promise.all([
+                api.get('/accounts'),
+                api.get('/transactions?pageSize=500'),
+            ]);
 
-        const accs = accRes.data ?? [];
-        const rawTxs = txRes.data.items ?? txRes.data ?? [];
-        const enrichedTxs = rawTxs.map(t => ({
-            ...t,
-            account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
-        }));
+            const accs = accRes.data ?? [];
+            const rawTxs = txRes.data.items ?? txRes.data ?? [];
+            const enrichedTxs = rawTxs.map(t => ({
+                ...t,
+                account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
+            }));
 
-        setAccounts(accs);
-        setTransactions(enrichedTxs);
-        return res.data;
+            setAccounts(accs);
+            setTransactions(enrichedTxs);
+            return res.data;
+        } finally {
+            setLoading(false);
+        }
     };
 
     const editTransaction = async (id, updates) => {
-        const res = await api.put(`/transactions/${id}`, {
-            name: updates.name,
-            category: updates.category,
-            amount: updates.amount !== undefined ? parseFloat(updates.amount) : undefined,
-            type: updates.type,
-            accountId: updates.accountId?.toString(),
-            description: updates.description,
-            date: updates.date,
-        });
-        // Refresh accounts and transactions to get enriched data
-        const [accRes, txRes] = await Promise.all([
-            api.get('/accounts'),
-            api.get('/transactions?pageSize=500'),
-        ]);
+        setLoading(true);
+        try {
+            const res = await api.put(`/transactions/${id}`, {
+                name: updates.name,
+                category: updates.category,
+                amount: updates.amount !== undefined ? parseFloat(updates.amount) : undefined,
+                type: updates.type,
+                accountId: updates.accountId?.toString(),
+                description: updates.description,
+                date: updates.date,
+            });
+            // Refresh accounts and transactions to get enriched data
+            const [accRes, txRes] = await Promise.all([
+                api.get('/accounts'),
+                api.get('/transactions?pageSize=500'),
+            ]);
 
-        const accs = accRes.data ?? [];
-        const rawTxs = txRes.data.items ?? txRes.data ?? [];
-        const enrichedTxs = rawTxs.map(t => ({
-            ...t,
-            account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
-        }));
+            const accs = accRes.data ?? [];
+            const rawTxs = txRes.data.items ?? txRes.data ?? [];
+            const enrichedTxs = rawTxs.map(t => ({
+                ...t,
+                account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
+            }));
 
-        setAccounts(accs);
-        setTransactions(enrichedTxs);
-        return res.data;
+            setAccounts(accs);
+            setTransactions(enrichedTxs);
+            return res.data;
+        } finally {
+            setLoading(false);
+        }
     };
 
     const deleteTransaction = async (id) => {
-        await api.delete(`/transactions/${id}`);
-        // Refresh accounts and transactions to get enriched data
-        const [accRes, txRes] = await Promise.all([
-            api.get('/accounts'),
-            api.get('/transactions?pageSize=500'),
-        ]);
+        setLoading(true);
+        try {
+            await api.delete(`/transactions/${id}`);
+            // Refresh accounts and transactions to get enriched data
+            const [accRes, txRes] = await Promise.all([
+                api.get('/accounts'),
+                api.get('/transactions?pageSize=500'),
+            ]);
 
-        const accs = accRes.data ?? [];
-        const rawTxs = txRes.data.items ?? txRes.data ?? [];
-        const enrichedTxs = rawTxs.map(t => ({
-            ...t,
-            account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
-        }));
+            const accs = accRes.data ?? [];
+            const rawTxs = txRes.data.items ?? txRes.data ?? [];
+            const enrichedTxs = rawTxs.map(t => ({
+                ...t,
+                account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
+            }));
 
-        setAccounts(accs);
-        setTransactions(enrichedTxs);
+            setAccounts(accs);
+            setTransactions(enrichedTxs);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const transferFunds = async (fromId, toId, amount, date) => {
-        const res = await api.post('/transactions/transfer', {
-            fromAccountId: fromId?.toString(),
-            toAccountId: toId?.toString(),
-            amount: parseFloat(amount),
-            date: date
-        });
-        const [accRes, txRes] = await Promise.all([
-            api.get('/accounts'),
-            api.get('/transactions?pageSize=500'),
-        ]);
-        const accs = accRes.data ?? [];
-        const rawTxs = txRes.data.items ?? txRes.data ?? [];
-        const enrichedTxs = rawTxs.map(t => ({
-            ...t,
-            account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
-        }));
+        setLoading(true);
+        try {
+            const res = await api.post('/transactions/transfer', {
+                fromAccountId: fromId?.toString(),
+                toAccountId: toId?.toString(),
+                amount: parseFloat(amount),
+                date: date
+            });
+            const [accRes, txRes] = await Promise.all([
+                api.get('/accounts'),
+                api.get('/transactions?pageSize=500'),
+            ]);
+            const accs = accRes.data ?? [];
+            const rawTxs = txRes.data.items ?? txRes.data ?? [];
+            const enrichedTxs = rawTxs.map(t => ({
+                ...t,
+                account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
+            }));
 
-        setAccounts(accs);
-        setTransactions(enrichedTxs);
-        return res.data;
+            setAccounts(accs);
+            setTransactions(enrichedTxs);
+            return res.data;
+        } finally {
+            setLoading(false);
+        }
     };
 
     // ── Categories ────────────────────────────────────────────────────────────

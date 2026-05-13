@@ -19,11 +19,11 @@ const typeFilters = [
 ];
 
 export default function Transactions() {
-    const { transactions, formatCurrency, accounts, categories, editTransaction, deleteTransaction, currencySymbol } = useData();
+    const { transactions, formatCurrency, accounts, categories, editTransaction, deleteTransaction, currencySymbol, loading } = useData();
     const [filterType, setFilterType] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [accountFilter, setAccountFilter] = useState('All');
-    const [dateRange, setDateRange] = useState(null);
+    const [dateRange, setDateRange] = useState([dayjs(), dayjs()]);
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState(null);
@@ -87,7 +87,8 @@ export default function Transactions() {
             return;
         }
 
-        const dataToExport = filteredTransactions.map(tx => ({
+        const dataToExport = filteredTransactions.map((tx, index) => ({
+            'Sl.No.': index + 1,
             'Date': dayjs(tx.date).format('YYYY-MM-DD HH:mm'),
             'Category': tx.category,
             'Description': tx.name,
@@ -183,6 +184,17 @@ export default function Transactions() {
                 <Table
                     dataSource={filteredTransactions}
                     columns={[
+                        {
+                            title: 'Sl.No.',
+                            key: 'slNo',
+                            width: 80,
+                            align: 'center',
+                            render: (_, record) => (
+                                <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>
+                                    {filteredTransactions.findIndex(t => t.id === record.id) + 1}
+                                </span>
+                            )
+                        },
                         {
                             title: 'Category',
                             dataIndex: 'category',
@@ -300,6 +312,7 @@ export default function Transactions() {
                         className: "premium-pagination"
                     }}
                     rowKey="id"
+                    loading={loading}
                     locale={{ emptyText: <Empty description="No transactions found" /> }}
                     className="premium-table"
                 />
