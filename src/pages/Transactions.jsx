@@ -49,18 +49,32 @@ export default function Transactions() {
     }
     const handleEdit = (record) => {
         setEditingTransaction(record);
+        const fromId = record.fromAccountId ?? record.FromAccountId;
+        const toId = record.toAccountId ?? record.ToAccountId;
         form.setFieldsValue({
-            ...record,
-            date: record.date ? dayjs(record.date) : dayjs()
+            name: record.name,
+            category: record.category,
+            type: record.type,
+            amount: record.amount,
+            description: record.description,
+            date: record.date ? dayjs(record.date) : dayjs(),
+            accountId: record.accountId != null ? String(record.accountId) : undefined,
+            fromAccountId: fromId != null ? String(fromId) : undefined,
+            toAccountId: toId != null ? String(toId) : undefined,
         });
         setIsEditModalOpen(true);
     };
 
     const handleUpdate = (values) => {
-        editTransaction(editingTransaction.id, {
+        const payload = {
             ...values,
-            date: values.date.toISOString()
-        });
+            date: values.date.toISOString(),
+        };
+        if (values.type !== 'transfer') {
+            delete payload.fromAccountId;
+            delete payload.toAccountId;
+        }
+        editTransaction(editingTransaction.id, payload);
         setIsEditModalOpen(false);
         message.success('Transaction updated successfully');
     };
@@ -373,11 +387,26 @@ export default function Transactions() {
                             </Form.Item>
                         </div>
                         <div style={{ flex: 1 }}>
-                            <Form.Item label="Account" name="accountId">
-                                <Select size="large" style={{ width: '100%', borderRadius: '10px' }}>
-                                    {accounts?.map(acc => <Select.Option key={acc.id} value={acc.id}>{acc.name}</Select.Option>)}
-                                </Select>
-                            </Form.Item>
+                            {txType === 'transfer' ? (
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <Form.Item label="From" name="fromAccountId" rules={[{ required: true, message: 'Required' }]} style={{ flex: 1 }}>
+                                        <Select size="large" placeholder="From">
+                                            {accounts?.map(acc => <Select.Option key={acc.id} value={String(acc.id)}>{acc.name}</Select.Option>)}
+                                        </Select>
+                                    </Form.Item>
+                                    <Form.Item label="To" name="toAccountId" rules={[{ required: true, message: 'Required' }]} style={{ flex: 1 }}>
+                                        <Select size="large" placeholder="To">
+                                            {accounts?.map(acc => <Select.Option key={acc.id} value={String(acc.id)}>{acc.name}</Select.Option>)}
+                                        </Select>
+                                    </Form.Item>
+                                </div>
+                            ) : (
+                                <Form.Item label="Account" name="accountId" rules={[{ required: true, message: 'Required' }]}>
+                                    <Select size="large" style={{ width: '100%', borderRadius: '10px' }} placeholder="Select account">
+                                        {accounts?.map(acc => <Select.Option key={acc.id} value={String(acc.id)}>{acc.name}</Select.Option>)}
+                                    </Select>
+                                </Form.Item>
+                            )}
                         </div>
                     </div>
 

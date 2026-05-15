@@ -3,6 +3,47 @@ import api from '../api';
 
 const DataContext = createContext();
 
+/** Compare account ids from API / forms (Guid string vs number). */
+function normalizeAccountId(id) {
+    if (id == null || id === '') return '';
+    return String(id);
+}
+
+function pickFirst(tx, ...keys) {
+    for (const k of keys) {
+        const v = tx[k];
+        if (v != null && v !== '') return v;
+    }
+    return null;
+}
+
+function findAccount(accs, accountId) {
+    const n = normalizeAccountId(accountId);
+    if (!n) return undefined;
+    return accs.find(a => normalizeAccountId(a.id) === n);
+}
+
+function enrichTransactions(accs, rawTxs) {
+    return rawTxs.map(t => {
+        const type = (t.type || '').toString().toLowerCase();
+        let accountLabel = 'Unknown';
+        if (type === 'transfer') {
+            const from = pickFirst(t, 'fromAccountId', 'FromAccountId', 'fromAccountID');
+            const to = pickFirst(t, 'toAccountId', 'ToAccountId', 'toAccountID');
+            if (from != null && to != null) {
+                const fa = findAccount(accs, from);
+                const ta = findAccount(accs, to);
+                accountLabel = `${fa?.name || '?'} → ${ta?.name || '?'}`;
+            } else {
+                accountLabel = findAccount(accs, t.accountId)?.name || 'Unknown';
+            }
+        } else {
+            accountLabel = findAccount(accs, t.accountId)?.name || 'Unknown';
+        }
+        return { ...t, account: accountLabel };
+    });
+}
+
 export function useData() {
     return useContext(DataContext);
 }
@@ -48,12 +89,7 @@ export function DataProvider({ children }) {
             ]);
             const accs = accRes.data ?? [];
             const rawTxs = txRes.data.items ?? txRes.data ?? [];
-
-            // Enrich transactions with account names
-            const enrichedTxs = rawTxs.map(t => ({
-                ...t,
-                account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
-            }));
+            const enrichedTxs = enrichTransactions(accs, rawTxs);
 
             setAccounts(accs);
             setTransactions(enrichedTxs);
@@ -88,21 +124,39 @@ export function DataProvider({ children }) {
     };
 
     const editAccount = async (id, updates) => {
-        const res = await api.put(`/accounts/${id}`, {
+        const idStr = normalizeAccountId(id);
+        const balRaw = updates.balance;
+        let balancePayload = undefined;
+        if (balRaw !== undefined && balRaw !== null && balRaw !== '') {
+            const n = parseFloat(balRaw);
+            if (Number.isFinite(n)) balancePayload = n;
+        }
+        const res = await api.put(`/accounts/${encodeURIComponent(idStr)}`, {
             name: updates.name,
             holderName: updates.holderName,
-            balance: updates.balance !== undefined ? parseFloat(updates.balance) : undefined,
+            balance: balancePayload,
             type: updates.type,
             color: updates.color,
             isDefault: updates.isDefault,
         });
-        setAccounts(prev => prev.map(a => a.id === id ? res.data : a));
-        return res.data;
+        const updated = res.data;
+        setAccounts(prev =>
+            prev.map(a => {
+                if (normalizeAccountId(a.id) !== idStr) return a;
+                const merged = { ...a, ...(updated || {}) };
+                if (balancePayload !== undefined && (updated == null || updated.balance === undefined)) {
+                    merged.balance = balancePayload;
+                }
+                return merged;
+            })
+        );
+        return updated;
     };
 
     const deleteAccount = async (id) => {
-        await api.delete(`/accounts/${id}`);
-        setAccounts(prev => prev.filter(a => a.id !== id));
+        const idStr = normalizeAccountId(id);
+        await api.delete(`/accounts/${encodeURIComponent(idStr)}`);
+        setAccounts(prev => prev.filter(a => normalizeAccountId(a.id) !== idStr));
     };
 
     // ── Transactions ──────────────────────────────────────────────────────────
@@ -110,12 +164,17 @@ export function DataProvider({ children }) {
     const addTransaction = async (newTx) => {
         setLoading(true);
         try {
+            let accountId = newTx.accountId;
+            if (accountId == null || accountId === '') {
+                const def = accounts.find(a => a.isDefault);
+                accountId = def?.id;
+            }
             const res = await api.post('/transactions', {
                 name: newTx.name,
                 category: newTx.category,
                 amount: parseFloat(newTx.amount),
                 type: newTx.type,
-                accountId: newTx.accountId?.toString(),
+                accountId: accountId != null ? String(accountId) : undefined,
                 description: newTx.description || '',
                 date: newTx.date || new Date().toISOString(),
             });
@@ -127,10 +186,7 @@ export function DataProvider({ children }) {
 
             const accs = accRes.data ?? [];
             const rawTxs = txRes.data.items ?? txRes.data ?? [];
-            const enrichedTxs = rawTxs.map(t => ({
-                ...t,
-                account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
-            }));
+            const enrichedTxs = enrichTransactions(accs, rawTxs);
 
             setAccounts(accs);
             setTransactions(enrichedTxs);
@@ -143,16 +199,39 @@ export function DataProvider({ children }) {
     const editTransaction = async (id, updates) => {
         setLoading(true);
         try {
-            const res = await api.put(`/transactions/${id}`, {
-                name: updates.name,
-                category: updates.category,
-                amount: updates.amount !== undefined ? parseFloat(updates.amount) : undefined,
-                type: updates.type,
-                accountId: updates.accountId?.toString(),
-                description: updates.description,
-                date: updates.date,
-            });
-            // Refresh accounts and transactions to get enriched data
+            const prevTx = transactions.find(t => normalizeAccountId(t.id) === normalizeAccountId(id));
+            const mergedForPayload = prevTx
+                ? {
+                    ...prevTx,
+                    ...updates,
+                    amount: updates.amount !== undefined ? updates.amount : prevTx.amount,
+                    accountId: updates.accountId ?? prevTx.accountId,
+                    type: updates.type ?? prevTx.type,
+                    name: updates.name ?? prevTx.name,
+                    category: updates.category ?? prevTx.category,
+                    description: updates.description !== undefined ? updates.description : prevTx.description,
+                    date: updates.date ?? prevTx.date,
+                    fromAccountId: updates.fromAccountId ?? pickFirst(prevTx, 'fromAccountId', 'FromAccountId'),
+                    toAccountId: updates.toAccountId ?? pickFirst(prevTx, 'toAccountId', 'ToAccountId'),
+                }
+                : updates;
+
+            const payload = {
+                name: mergedForPayload.name,
+                category: mergedForPayload.category,
+                amount: parseFloat(mergedForPayload.amount),
+                type: mergedForPayload.type,
+                accountId: mergedForPayload.accountId != null ? String(mergedForPayload.accountId) : undefined,
+                description: mergedForPayload.description ?? '',
+                date: mergedForPayload.date,
+            };
+            const fromId = pickFirst(mergedForPayload, 'fromAccountId', 'FromAccountId');
+            const toId = pickFirst(mergedForPayload, 'toAccountId', 'ToAccountId');
+            if (fromId != null) payload.fromAccountId = String(fromId);
+            if (toId != null) payload.toAccountId = String(toId);
+
+            const res = await api.put(`/transactions/${id}`, payload);
+
             const [accRes, txRes] = await Promise.all([
                 api.get('/accounts'),
                 api.get('/transactions?pageSize=500'),
@@ -160,10 +239,7 @@ export function DataProvider({ children }) {
 
             const accs = accRes.data ?? [];
             const rawTxs = txRes.data.items ?? txRes.data ?? [];
-            const enrichedTxs = rawTxs.map(t => ({
-                ...t,
-                account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
-            }));
+            const enrichedTxs = enrichTransactions(accs, rawTxs);
 
             setAccounts(accs);
             setTransactions(enrichedTxs);
@@ -177,7 +253,6 @@ export function DataProvider({ children }) {
         setLoading(true);
         try {
             await api.delete(`/transactions/${id}`);
-            // Refresh accounts and transactions to get enriched data
             const [accRes, txRes] = await Promise.all([
                 api.get('/accounts'),
                 api.get('/transactions?pageSize=500'),
@@ -185,10 +260,8 @@ export function DataProvider({ children }) {
 
             const accs = accRes.data ?? [];
             const rawTxs = txRes.data.items ?? txRes.data ?? [];
-            const enrichedTxs = rawTxs.map(t => ({
-                ...t,
-                account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
-            }));
+
+            const enrichedTxs = enrichTransactions(accs, rawTxs);
 
             setAccounts(accs);
             setTransactions(enrichedTxs);
@@ -212,10 +285,7 @@ export function DataProvider({ children }) {
             ]);
             const accs = accRes.data ?? [];
             const rawTxs = txRes.data.items ?? txRes.data ?? [];
-            const enrichedTxs = rawTxs.map(t => ({
-                ...t,
-                account: accs.find(a => a.id === t.accountId)?.name || 'Unknown'
-            }));
+            const enrichedTxs = enrichTransactions(accs, rawTxs);
 
             setAccounts(accs);
             setTransactions(enrichedTxs);

@@ -23,7 +23,7 @@ export default function Transfer() {
             amount: Number(values.amount),
             date: values.date.toISOString()
         };
-        transferFunds(transferData.fromAccountId, transferData.toAccountId, transferData.amount);
+        transferFunds(transferData.fromAccountId, transferData.toAccountId, transferData.amount, transferData.date);
         message.success('Funds transferred successfully');
         form.resetFields();
     };

@@ -91,10 +91,17 @@ export default function Accounts() {
         });
     };
 
-    const handleEdit = (values) => {
-        editAccount(editingAccount.id, { ...values, color: editColor, isDefault: editIsDefault });
-        setEditingAccount(null);
-        toast.success('Account updated successfully');
+    const handleEdit = async (values) => {
+        if (!editingAccount) return;
+        try {
+            await editAccount(editingAccount.id, { ...values, color: editColor, isDefault: editIsDefault });
+            setEditingAccount(null);
+            editForm.resetFields();
+            toast.success('Account updated successfully');
+        } catch (e) {
+            console.error(e);
+            toast.error(e?.response?.data?.message || 'Could not update account');
+        }
     };
 
     const getMenuItems = (acc) => [

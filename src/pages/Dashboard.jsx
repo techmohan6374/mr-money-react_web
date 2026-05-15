@@ -20,7 +20,7 @@ function Dashboard() {
     const [searchQuery, setSearchQuery] = useState('')
     const {
         transactions, accounts, totalIncome, totalExpense, netBalance,
-        addTransaction, formatCurrency, formatDate, themeMode, toggleTheme,
+        addTransaction, transferFunds, formatCurrency, formatDate, themeMode, toggleTheme,
         categories, addCategory, currencySymbol, loadAllData
     } = useData()
 
@@ -108,7 +108,7 @@ function Dashboard() {
                     values.fromAccountId,
                     values.toAccountId,
                     values.amount,
-                    selectedDate
+                    values.date ? dayjs(values.date).toISOString() : dayjs().toISOString()
                 );
             }
         } else {
@@ -330,19 +330,19 @@ function Dashboard() {
                                     <div style={{ display: 'flex', gap: '8px' }}>
                                         <Form.Item label="From" name="fromAccountId" rules={[{ required: true }]} style={{ flex: 1 }}>
                                             <Select size="large" placeholder="From">
-                                                {accounts?.map(acc => <Select.Option key={acc.id} value={acc.id}>{acc.name}</Select.Option>)}
+                                                {accounts?.map(acc => <Select.Option key={acc.id} value={String(acc.id)}>{acc.name}</Select.Option>)}
                                             </Select>
                                         </Form.Item>
                                         <Form.Item label="To" name="toAccountId" rules={[{ required: true }]} style={{ flex: 1 }}>
                                             <Select size="large" placeholder="To">
-                                                {accounts?.map(acc => <Select.Option key={acc.id} value={acc.id}>{acc.name}</Select.Option>)}
+                                                {accounts?.map(acc => <Select.Option key={acc.id} value={String(acc.id)}>{acc.name}</Select.Option>)}
                                             </Select>
                                         </Form.Item>
                                     </div>
                                 ) : (
                                     <Form.Item label="Account" name="accountId">
                                         <Select size="large" style={{ width: '100%', borderRadius: '10px' }} placeholder="Select Account">
-                                            {accounts?.map(acc => <Select.Option key={acc.id} value={acc.id}>{acc.name}</Select.Option>)}
+                                            {accounts?.map(acc => <Select.Option key={acc.id} value={String(acc.id)}>{acc.name}</Select.Option>)}
                                         </Select>
                                     </Form.Item>
                                 )}
@@ -422,7 +422,17 @@ function Dashboard() {
 
                 {/* Global FAB */}
                 <button
-                    onClick={() => setIsAddTxModalOpen(true)}
+                    onClick={() => {
+                        const def = accounts?.find(a => a.isDefault);
+                        form.resetFields();
+                        form.setFieldsValue({
+                            type: 'expense',
+                            category: 'Others',
+                            date: dayjs(),
+                            accountId: def != null ? String(def.id) : undefined,
+                        });
+                        setIsAddTxModalOpen(true);
+                    }}
                     style={{
                         position: 'fixed',
                         bottom: '32px',
